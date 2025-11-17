@@ -1,0 +1,91 @@
+{
+    // The name of your Keycloak realm
+    "realm": "local-dev",
+
+    // Realm is active and available
+    "enabled": true,
+
+    // Display name shown in Keycloak UI (optional)
+    "displayName": "Local Development Realm",
+
+    // Clients represent applications that authenticate using this realm
+    "clients": [
+        {
+            // Your Symfony application
+            "clientId": "symfony-app",
+
+            // OIDC (OpenID Connect) protocol
+            "protocol": "openid-connect",
+
+            // Client is active
+            "enabled": true,
+
+            // "false" = confidential client → uses a client secret
+            // "true" = public client → no secret (e.g., browser SPA)
+            "publicClient": false,
+
+            // The client secret is generated here but should be changed in .env
+            "secret": "CHANGE-ME-IN-.env",
+
+            // Standard OIDC Authorization Code flow
+            "standardFlowEnabled": true,
+
+            // Deprecated in most setups, should be off
+            "implicitFlowEnabled": false,
+
+            // Direct access grants = username/password via API
+            // Disabled for security; not needed for Symfony login
+            "directAccessGrantsEnabled": false,
+
+            // Service accounts = machine-to-machine credentials
+            // Not needed for Symfony app
+            "serviceAccountsEnabled": false,
+
+            // Where Keycloak is allowed to redirect users after login
+            "redirectUris": [
+                "http://localhost:8000/oidc/callback"
+            ],
+
+            // Allowed origins for CORS (mainly for JS front-ends)
+            "webOrigins": [
+                "http://localhost:8000"
+            ],
+
+            // Additional attributes
+            "attributes": {
+                // Enables PKCE for improved security
+                "pkce.code.challenge.method": "S256",
+                // "If true, Keycloak will sign the SAML assertion. Set false for local dev to simplify testing."
+                "saml.assertion.signature": "false",
+                // "If true, Keycloak includes an <AuthnStatement> element in the SAML response. Usually needed for SAML SPs that expect it.",
+                "saml.authnstatement": "true",
+                // "Forces Keycloak to send SAML responses via HTTP POST binding. This is common and works in most SPs.",
+                "saml.force.post.binding": "true",
+                // "If true, Keycloak encrypts the assertion. Set false for local dev to simplify testing.",
+                "saml.encrypt": "false",
+                // "Algorithm used for signing SAML messages. Only applies if signing is enabled.",
+                "saml.signature.algorithm": "RSA_SHA256",
+                // "If true, the SAML response itself is signed in addition to the assertion.",
+                "saml.server.signature": "false",
+                // "Forces Keycloak to always include NameID format in the response. Useful for SP compatibility.",
+                "saml.force.name.id.format": "true",
+                // "The NameID format to use. 'username' is simplest for local dev.",
+                "saml_name_id_format": "username",
+                // "Canonicalization method for signatures. Usually the default is fine for dev."
+                "saml.signature.canonicalization.method": "http://www.w3.org/2001/10/xml-exc-c14n#"
+            }
+        }
+    ],
+
+    // You are keeping users external (login happens via Keycloak UI)
+    "users": [],
+
+    // Same for groups — can be added later
+    "groups": [],
+
+    // Defines realm-level and client-level roles
+    "roles": {
+        "realm": [],
+        "client": {}
+    }
+}

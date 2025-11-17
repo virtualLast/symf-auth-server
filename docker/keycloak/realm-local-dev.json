@@ -1,0 +1,54 @@
+{
+    "realm": "local-dev",
+    "enabled": true,
+    "displayName": "Local Development Realm",
+
+    "clients": [
+        {
+            "clientId": "symfony-app",
+            "protocol": "openid-connect",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "CHANGE-ME-IN-.env",
+            "standardFlowEnabled": true,
+            "implicitFlowEnabled": false,
+            "directAccessGrantsEnabled": false,
+            "serviceAccountsEnabled": false,
+            "redirectUris": [
+                "http://localhost:8000/oidc/callback"
+            ],
+            "webOrigins": [
+                "http://localhost:8000"
+            ],
+            "attributes": {
+                "pkce.code.challenge.method": "S256"
+            }
+        },
+        {
+            "clientId": "symfony-saml",
+            "protocol": "saml",
+            "enabled": true,
+            "publicClient": false,
+            "directAccessGrantsEnabled": false,
+            "baseUrl": "http://localhost:8000/saml/acs",
+            "adminUrl": "http://localhost:8000/saml/admin",
+            "redirectUris": [
+                "http://localhost:8000/saml/acs"
+            ],
+            "attributes": {
+                "saml.assertion.signature": "false",
+                "saml.authnstatement": "true",
+                "saml.force.post.binding": "true",
+                "saml.encrypt": "false"
+            }
+        }
+    ],
+
+    "users": [],
+    "groups": [],
+
+    "roles": {
+        "realm": [],
+        "client": {}
+    }
+}
