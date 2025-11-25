@@ -80,7 +80,7 @@ class SamlController extends AbstractController
             'nameId' => $nameId,
         ]);
 
-        return $this->redirect('dashboard');
+        return $this->redirectToRoute('app_dashboard_index');
     }
 
     /**
