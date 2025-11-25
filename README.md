@@ -3,3 +3,6 @@ custom saml and oidc realms are created.
 added composer packages for saml, oidc + keycloak.
 basic config for keycloak oidc config.
 controller route path stubs for saml and oidc.
+saml settings created.
+dashboard template created, controller with routing to template.
+saml controller method stubs updated with basic flow to dashboard.
