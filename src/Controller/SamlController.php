@@ -52,12 +52,6 @@ class SamlController extends AbstractController
         return new Response('logout.');
     }
 
-    #[Route('/callback', name: 'saml_callback')]
-    public function callback(): Response
-    {
-        return new Response('callback.');
-    }
-
     /**
      * @throws Error
      * @throws ValidationError
@@ -85,6 +79,7 @@ class SamlController extends AbstractController
     }
 
     /**
+     * Endpoint used by keycloak to find out data about us, the service provider.
      * @throws Error
      * @throws \Exception
      */
