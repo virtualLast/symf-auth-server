@@ -36,6 +36,7 @@ class SamlController extends AbstractController
     public function login(): Response
     {
         $auth = $this->getAuth();
+        $settings = $auth->getSettings();
         $auth->login();
         return new Response('login.');
     }

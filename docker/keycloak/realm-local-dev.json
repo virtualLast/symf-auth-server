@@ -25,7 +25,7 @@
             }
         },
         {
-            "clientId": "symfony-saml",
+            "clientId": "http://localhost:8081/realms/local-dev",
             "protocol": "saml",
             "enabled": true,
             "publicClient": false,
@@ -36,15 +36,79 @@
                 "http://localhost:8000/saml/acs"
             ],
             "attributes": {
-                "saml.assertion.signature": "false",
+                "saml.client.signature": "false",
+                "saml.server.signature": "true",
+                "saml_name_id_format": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+                "saml_assertion_consumer_url_post": "http://localhost:8000/saml/acs",
+                "saml.client.entity.id": "http://localhost:8081/realms/local-dev",
+                "saml.assertion.signature": "true",
                 "saml.authnstatement": "true",
                 "saml.force.post.binding": "true",
-                "saml.encrypt": "false"
+                "saml.encrypt": "false",
+                "saml.sign.authn.requests": "false"
             }
         }
     ],
 
-    "users": [],
+    "users": [
+        {
+            "username": "oidc_normal_user",
+            "email": "oidc_normal_user@example.local",
+            "firstName": "OIDC",
+            "lastName": "Normal",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password123",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "oidc_admin_user",
+            "email": "oidc_admin_user@example.local",
+            "firstName": "OIDC",
+            "lastName": "Admin",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin123",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "saml_normal_user",
+            "email": "saml_normal_user@example.local",
+            "firstName": "SAML",
+            "lastName": "Normal",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password123",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "saml_admin_user",
+            "email": "saml_admin_user@example.local",
+            "firstName": "SAML",
+            "lastName": "Admin",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin123",
+                    "temporary": false
+                }
+            ]
+        }
+    ],
+
     "groups": [],
 
     "roles": {
