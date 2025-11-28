@@ -38,7 +38,7 @@ class MetadataService
      */
     public function getMetadata(): MetadataDto
     {
-        return $this->cache->get(MetadataService::class . self::CACHE_KEY, function (ItemInterface $item) {
+        return $this->cache->get(urlencode(MetadataService::class . self::CACHE_KEY), function (ItemInterface $item) {
             $response = $this->client->request(
                 'GET',
                 self::METADATA_URL,

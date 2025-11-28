@@ -35,9 +35,9 @@ class SamlController extends AbstractController
     {
         try {
             $settings = require $this->getParameter('kernel.project_dir') . '/config/saml/settings.php';
-            $certificate = $this->metadataService->getMetadata();
+            $metaData = $this->metadataService->getMetadata();
             if(isset($settings[MetadataService::SETTINGS_KEY_IDP])) {
-                $settings[MetadataService::SETTINGS_KEY_IDP][MetadataService::SETTINGS_KEY_CERT] = $certificate;
+                $settings[MetadataService::SETTINGS_KEY_IDP][MetadataService::SETTINGS_KEY_CERT] = $metaData->getCertificate();
             }
             return new Auth($settings);
         } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
