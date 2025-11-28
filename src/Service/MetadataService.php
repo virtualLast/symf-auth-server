@@ -28,6 +28,9 @@ class MetadataService
     }
 
     /**
+     * Get the SAML metadata from the IdP.
+     * Cache it for 24 hours.
+     * @return MetadataDto
      * @throws ServerExceptionInterface
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
@@ -52,6 +55,7 @@ class MetadataService
     }
 
     /**
+     * pull out the certificate, this can be extended to pull out other metadata if needed.
      */
     private function parseMetadata(string $metadata): MetadataDto
     {
@@ -60,6 +64,11 @@ class MetadataService
         return (new MetadataDto())->setCertificate($certificate);
     }
 
+    /**
+     * Extract the X509Certificate from the metadata.
+     * @param string $metadata
+     * @return string
+     */
     private function extractCertificate(string $metadata): string
     {
         $xml = simplexml_load_string($metadata);
