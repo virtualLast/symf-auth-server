@@ -28,7 +28,6 @@ class MetadataService
     }
 
     /**
-     * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface

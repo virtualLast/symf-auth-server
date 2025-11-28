@@ -7,3 +7,4 @@ saml settings created.
 dashboard template created, controller with routing to template.
 saml controller method stubs updated with basic flow to dashboard.
 next steps document created with what to do next.
+caching enabled for saml. event subscriber stuff not required - after consideration the approach taken in the controller is sufficient.
