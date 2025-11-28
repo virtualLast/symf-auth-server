@@ -4,27 +4,43 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\MetadataService;
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Error;
 use OneLogin\Saml2\ValidationError;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 #[Route('/saml')]
 class SamlController extends AbstractController
 {
+
+    public function __construct(
+        private readonly MetadataService $metadataService
+    )
+    {
+    }
 
     /**
      * @throws Error
      */
     private function getAuth(): Auth
     {
-        $settings = require $this->getParameter('kernel.project_dir') . '/config/saml/settings.php';
         try {
+            $settings = require $this->getParameter('kernel.project_dir') . '/config/saml/settings.php';
+            $certificate = $this->metadataService->getMetadata();
+            if(isset($settings[MetadataService::SETTINGS_KEY_IDP])) {
+                $settings[MetadataService::SETTINGS_KEY_IDP][MetadataService::SETTINGS_KEY_CERT] = $certificate;
+            }
             return new Auth($settings);
-        } catch (Error|\Exception $e) {
+        } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
             throw new Error('Unable to create OneLogin_Saml2_Auth instance: ' . $e->getMessage());
         }
     }
@@ -36,7 +52,6 @@ class SamlController extends AbstractController
     public function login(): Response
     {
         $auth = $this->getAuth();
-        $settings = $auth->getSettings();
         $auth->login();
         return new Response('login.');
     }
