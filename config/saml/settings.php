@@ -29,7 +29,7 @@ return [
     ],
 
     'security' => [
-        'authnRequestsSigned' => true,  // SP does NOT sign AuthNRequests
+        'authnRequestsSigned' => true,  // SP does sign AuthNRequests
         'wantAssertionsSigned' => true,  // SP WILL expect Keycloak-signed assertions
         'wantMessagesSigned' => false,   // optional; usually false for POST binding
     ],
