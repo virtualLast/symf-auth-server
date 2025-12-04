@@ -4,17 +4,29 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/oidc')]
 class OidcController extends AbstractController
 {
+    public function __construct(private readonly ClientRegistry $clientRegistry)
+    {
+    }
+
     #[Route('/login', name: 'oidc_login')]
     public function login(): Response
     {
-        return new Response('login.');
+        /* @var $client KeycloakClient */
+        $client = $this->clientRegistry->getClient('keycloak');
+        return $client->redirect([
+            'openid', 'profile', 'email'
+        ]);
     }
 
     #[Route('/logout', name: 'oidc_logout')]
@@ -24,8 +36,18 @@ class OidcController extends AbstractController
     }
 
     #[Route('/callback', name: 'oidc_callback')]
-    public function callback(): Response
+    public function callback(Request $request): Response
     {
-        return new Response('callback.');
+        /* @var $client KeycloakClient */
+        $client = $this->clientRegistry->getClient('keycloak');
+
+        try {
+            $accessToken = $client->getAccessToken();
+            $user = $client->fetchUserFromToken($accessToken);
+        } catch (IdentityProviderException $e) {
+            return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new Response(sprintf('callback success: %s', json_encode($user->toArray())));
     }
 }

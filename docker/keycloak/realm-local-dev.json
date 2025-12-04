@@ -9,20 +9,19 @@
             "protocol": "openid-connect",
             "enabled": true,
             "publicClient": false,
-            "secret": "CHANGE-ME-IN-.env",
             "standardFlowEnabled": true,
             "implicitFlowEnabled": false,
             "directAccessGrantsEnabled": false,
             "serviceAccountsEnabled": false,
             "redirectUris": [
-                "http://localhost:8000/oidc/callback"
+                "https://localhost:8000/oidc/callback",
+                "https://127.0.0.1:8000/oidc/callback"
             ],
             "webOrigins": [
-                "http://localhost:8000"
+                "https://localhost:8000",
+                "https://127.0.0.1:8000"
             ],
-            "attributes": {
-                "pkce.code.challenge.method": "S256"
-            }
+            "attributes": {}
         },
         {
             "clientId": "http://localhost:8081/realms/local-dev",
