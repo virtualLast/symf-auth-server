@@ -21,7 +21,6 @@ services:
     command:
       - "start-dev"
       - "--import-realm"
-      - "--optimized"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
@@ -29,7 +28,6 @@ services:
       - "8081:8080"
     volumes:
       - ./docker/keycloak/realm-local-dev.json:/opt/keycloak/data/import/realm-local-dev.json
-      - ./docker/keycloak/client-secret.json:/opt/keycloak/data/import/client-secret.json
   ###< keycloak ###
 
 volumes:

@@ -7,6 +7,7 @@
         {
             "clientId": "symfony-app",
             "protocol": "openid-connect",
+            "secret": "nvz*RDK1hcm3pmn4jva",
             "enabled": true,
             "publicClient": false,
             "standardFlowEnabled": true,
@@ -14,12 +15,10 @@
             "directAccessGrantsEnabled": false,
             "serviceAccountsEnabled": false,
             "redirectUris": [
-                "https://localhost:8000/oidc/callback",
-                "https://127.0.0.1:8000/oidc/callback"
+                "https://localhost:8000/oidc/callback"
             ],
             "webOrigins": [
-                "https://localhost:8000",
-                "https://127.0.0.1:8000"
+                "https://localhost:8000"
             ],
             "attributes": {}
         },

@@ -18,4 +18,3 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
-/docker/keycloak/client-secret.json

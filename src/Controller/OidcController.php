@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\CookieService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
+use League\OAuth2\Client\Token\AccessTokenInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/oidc')]
 class OidcController extends AbstractController
 {
-    public function __construct(private readonly ClientRegistry $clientRegistry)
+    public function __construct(private readonly ClientRegistry $clientRegistry, private readonly CookieService $cookieService)
     {
     }
 
@@ -48,6 +51,23 @@ class OidcController extends AbstractController
             return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new Response(sprintf('callback success: %s', json_encode($user->toArray())));
+        $response = new Response();
+
+        if (
+            $accessToken instanceof AccessTokenInterface
+            && $user instanceof ResourceOwnerInterface
+        ) {
+            $cookie = $this->cookieService->create($accessToken);
+            $response->headers->setCookie($cookie);
+        }
+
+        $response->setContent(sprintf('callback success: %s', json_encode(
+            [
+                'user' => $user->toArray(),
+                'access_token' => $accessToken
+            ]
+        )));
+
+        return $response;
     }
 }
