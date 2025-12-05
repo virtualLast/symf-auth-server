@@ -3,14 +3,18 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use App\Trait\CreatedUpdatedTrait;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface
 {
+    use CreatedUpdatedTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -24,6 +28,9 @@ class User implements UserInterface
      */
     #[ORM\Column]
     private array $roles = [];
+
+    #[ORM\Column(length: 180)]
+    private ?string $tokenSub = null;
 
     public function getId(): ?int
     {
@@ -70,6 +77,18 @@ class User implements UserInterface
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function getTokenSub(): ?string
+    {
+        return $this->tokenSub;
+    }
+
+    public function setTokenSub(?string $tokenSub): static
+    {
+        $this->tokenSub = $tokenSub;
 
         return $this;
     }
