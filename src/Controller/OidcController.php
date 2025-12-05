@@ -57,6 +57,11 @@ class OidcController extends AbstractController
             $accessToken instanceof AccessTokenInterface
             && $user instanceof ResourceOwnerInterface
         ) {
+            /**
+             * todo validate user data against the db
+             * todo store refresh token in db along with user data + access token
+             * todo create custom access token cookie
+             */
             $cookie = $this->cookieService->create($accessToken);
             $response->headers->setCookie($cookie);
         }
