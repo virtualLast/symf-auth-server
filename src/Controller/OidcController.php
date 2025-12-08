@@ -46,33 +46,26 @@ class OidcController extends AbstractController
 
         try {
             $accessToken = $client->getAccessToken();
-            $user = $client->fetchUserFromToken($accessToken);
+            $remoteUser = $client->fetchUserFromToken($accessToken);
         } catch (IdentityProviderException $e) {
             return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $response = new Response();
+        try {
+            $localUser = $this->userService->findOrCreate($remoteUser);
+            $internalTokenData = $this->tokenService->create($localUser, $accessToken);
 
-        if (
-            $accessToken instanceof AccessTokenInterface
-            && $user instanceof ResourceOwnerInterface
-        ) {
-            /**
-             * todo validate user data against the db
-             * todo store refresh token in db along with user data + access token
-             * todo create custom access token cookie
-             */
-            $cookie = $this->cookieService->create($accessToken);
-            $response->headers->setCookie($cookie);
+            $cookieAccess = $this->cookieService->createAccess($internalTokenData['access_token']);
+            $cookieRefresh = $this->cookieService->createRefresh($internalTokenData['refresh_token']);
+
+            $response = $this->redirectToRoute('app_dashboard_index');
+            $response->headers->setCookie($cookieAccess);
+            $response->headers->setCookie($cookieRefresh);
+
+            return $response;
+
+        } catch (\Throwable $e) {
+            return new Response(sprintf('callback error: %s', $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $response->setContent(sprintf('callback success: %s', json_encode(
-            [
-                'user' => $user->toArray(),
-                'access_token' => $accessToken
-            ]
-        )));
-
-        return $response;
     }
 }
