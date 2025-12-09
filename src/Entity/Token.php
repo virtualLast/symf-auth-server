@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TokenRepository::class)]
 #[ORM\Table(name: '`token`')]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_REFRESH_TOKEN', fields: ['refreshToken'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_LOCAL_REFRESH', fields: ['localRefreshToken'])]
 #[ORM\HasLifecycleCallbacks]
 class Token
 {
@@ -21,17 +21,44 @@ class Token
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'tokens')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $tokenSub = null;
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?User $user = null;
 
-    #[ORM\Column(type: Types::TEXT)]
-    private ?string $refreshToken = null;
+    // -------------------------------------
+    // LOCAL OPAQUE TOKENS (your own system)
+    // -------------------------------------
 
-    #[ORM\Column(type: Types::TEXT)]
-    private ?string $accessToken = null;
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    private string $localAccessToken;
+
+    #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
+    private string $localRefreshToken;
 
     #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $expiry = null;
+    private ?\DateTimeImmutable $localAccessTokenExpiresAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $localRefreshTokenExpiresAt = null;
+
+    // -------------------------
+    // STORED KEYCLOAK TOKENS
+    // -------------------------
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $idpAccessToken = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $idpRefreshToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $idpAccessTokenExpiresAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $idpRefreshTokenExpiresAt = null;
+
+    // -------------------------------------
+    // Revocation / Session state
+    // -------------------------------------
 
     #[ORM\Column(options: ['default' => false])]
     private bool $revoked = false;
@@ -41,51 +68,105 @@ class Token
         return $this->id;
     }
 
-    public function getTokenSub(): ?User
+    public function getUser(): ?User
     {
-        return $this->tokenSub;
+        return $this->user;
     }
 
-    public function setTokenSub(?User $tokenSub): static
+    public function setUser(?User $user): static
     {
-        $this->tokenSub = $tokenSub;
-
+        $this->user = $user;
         return $this;
     }
 
-    public function getRefreshToken(): ?string
+    // Local Access Token
+    public function getLocalAccessToken(): string
     {
-        return $this->refreshToken;
+        return $this->localAccessToken;
     }
 
-    public function setRefreshToken(string $refreshToken): static
+    public function setLocalAccessToken(string $token): static
     {
-        $this->refreshToken = $refreshToken;
-
+        $this->localAccessToken = $token;
         return $this;
     }
 
-    public function getAccessToken(): ?string
+    public function getLocalRefreshToken(): string
     {
-        return $this->accessToken;
+        return $this->localRefreshToken;
     }
 
-    public function setAccessToken(string $accessToken): static
+    public function setLocalRefreshToken(string $token): static
     {
-        $this->accessToken = $accessToken;
-
+        $this->localRefreshToken = $token;
         return $this;
     }
 
-    public function getExpiry(): ?\DateTimeImmutable
+    public function getLocalAccessTokenExpiresAt(): ?\DateTimeImmutable
     {
-        return $this->expiry;
+        return $this->localAccessTokenExpiresAt;
     }
 
-    public function setExpiry(?\DateTimeImmutable $expiry): static
+    public function setLocalAccessTokenExpiresAt(?\DateTimeImmutable $expiry): static
     {
-        $this->expiry = $expiry;
+        $this->localAccessTokenExpiresAt = $expiry;
+        return $this;
+    }
 
+    public function getLocalRefreshTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->localRefreshTokenExpiresAt;
+    }
+
+    public function setLocalRefreshTokenExpiresAt(?\DateTimeImmutable $expiry): static
+    {
+        $this->localRefreshTokenExpiresAt = $expiry;
+        return $this;
+    }
+
+    // IDP / Keycloak Tokens
+
+    public function getIdpAccessToken(): ?string
+    {
+        return $this->idpAccessToken;
+    }
+
+    public function setIdpAccessToken(?string $token): static
+    {
+        $this->idpAccessToken = $token;
+        return $this;
+    }
+
+    public function getIdpRefreshToken(): ?string
+    {
+        return $this->idpRefreshToken;
+    }
+
+    public function setIdpRefreshToken(?string $token): static
+    {
+        $this->idpRefreshToken = $token;
+        return $this;
+    }
+
+    public function getIdpAccessTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->idpAccessTokenExpiresAt;
+    }
+
+    public function setIdpAccessTokenExpiresAt(?\DateTimeImmutable $expiry): static
+    {
+        $this->idpAccessTokenExpiresAt = $expiry;
+        return $this;
+    }
+
+    public function getIdpRefreshTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->idpRefreshTokenExpiresAt;
+    }
+
+    public function setIdpRefreshTokenExpiresAt(?\DateTimeImmutable $expiry): static
+    {
+        $this->idpRefreshTokenExpiresAt = $expiry;
         return $this;
     }
 
@@ -97,7 +178,6 @@ class Token
     public function setRevoked(bool $revoked): static
     {
         $this->revoked = $revoked;
-
         return $this;
     }
 }

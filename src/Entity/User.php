@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: '`user`')]
+#[ORM\Table(name: 'app_users')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 #[ORM\HasLifecycleCallbacks]
 class User implements UserInterface
@@ -26,18 +26,18 @@ class User implements UserInterface
     private ?string $email = null;
 
     /**
-     * @var list<string> The user roles
+     * @var list<string>
      */
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\Column(length: 180)]
-    private ?string $tokenSub = null;
+    #[ORM\Column(length: 180, unique: true)]
+    private ?string $tokenSub = null; // The Keycloak "sub"
 
     /**
      * @var Collection<int, Token>
      */
-    #[ORM\OneToMany(targetEntity: Token::class, mappedBy: 'tokenSub', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Token::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $tokens;
 
     public function __construct()
@@ -58,27 +58,17 @@ class User implements UserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return $this->email;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
@@ -90,7 +80,6 @@ class User implements UserInterface
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
-
         return $this;
     }
 
@@ -99,28 +88,17 @@ class User implements UserInterface
         return $this->tokenSub;
     }
 
-    public function setTokenSub(?string $tokenSub): static
+    public function setTokenSub(string $tokenSub): static
     {
         $this->tokenSub = $tokenSub;
-
         return $this;
     }
 
-    /**
-     * Ensure the session doesn't contain actual password hashes by CRC32C-hashing them, as supported since Symfony 7.3.
-     */
     public function __serialize(): array
     {
         $data = (array) $this;
-        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
-
+        unset($data['password']); // users do not have passwords here
         return $data;
-    }
-
-    #[\Deprecated]
-    public function eraseCredentials(): void
-    {
-        // @deprecated, to be removed when upgrading to Symfony 8
     }
 
     /**
@@ -135,21 +113,23 @@ class User implements UserInterface
     {
         if (!$this->tokens->contains($token)) {
             $this->tokens->add($token);
-            $token->setTokenSub($this);
+            $token->setUser($this);
         }
-
         return $this;
     }
 
     public function removeToken(Token $token): static
     {
         if ($this->tokens->removeElement($token)) {
-            // set the owning side to null (unless already changed)
-            if ($token->getTokenSub() === $this) {
-                $token->setTokenSub(null);
+            if ($token->getUser() === $this) {
+                $token->setUser(null);
             }
         }
-
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // TODO: Implement eraseCredentials() method.
     }
 }

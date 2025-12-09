@@ -2,19 +2,34 @@
 
 namespace App\Service;
 
-use League\OAuth2\Client\Token\AccessTokenInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class CookieService
 {
-    public const COOKIE_NAME = 'access_token';
+    public const ACCESS_COOKIE_NAME = 'access_token';
+    public const REFRESH_COOKIE_NAME = 'refresh_token';
 
-    public function create(AccessTokenInterface $accessToken): Cookie
+    public function createAccess(string $accessToken, \DateTimeImmutable $expiry): Cookie
     {
         return new Cookie(
-            self::COOKIE_NAME,
-            $accessToken->getToken(),
-            new \DateTimeImmutable('+1 day'),
+            self::ACCESS_COOKIE_NAME,
+            $accessToken,
+            $expiry,
+            '/',
+            null,
+            true,
+            true,
+            false,
+            Cookie::SAMESITE_LAX
+        );
+    }
+
+    public function createRefresh(string $refreshToken, \DateTimeImmutable $expiry): Cookie
+    {
+        return new Cookie(
+            self::REFRESH_COOKIE_NAME,
+            $refreshToken,
+            $expiry,
             '/',
             null,
             true,
