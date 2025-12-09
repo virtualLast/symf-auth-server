@@ -8,6 +8,9 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TokenRepository::class)]
+#[ORM\Table(name: '`token`')]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_REFRESH_TOKEN', fields: ['refreshToken'])]
+#[ORM\HasLifecycleCallbacks]
 class Token
 {
     use CreatedUpdatedTrait;
@@ -30,8 +33,8 @@ class Token
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $expiry = null;
 
-    #[ORM\Column]
-    private ?bool $revoked = null;
+    #[ORM\Column(options: ['default' => false])]
+    private bool $revoked = false;
 
     public function getId(): ?int
     {
@@ -86,7 +89,7 @@ class Token
         return $this;
     }
 
-    public function isRevoked(): ?bool
+    public function isRevoked(): bool
     {
         return $this->revoked;
     }

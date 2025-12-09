@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\CookieService;
+use App\Service\TokenService;
+use App\Service\UserService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use League\OAuth2\Client\Provider\ResourceOwnerInterface;
-use League\OAuth2\Client\Token\AccessTokenInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,8 +18,12 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/oidc')]
 class OidcController extends AbstractController
 {
-    public function __construct(private readonly ClientRegistry $clientRegistry, private readonly CookieService $cookieService)
-    {
+    public function __construct(
+        private readonly ClientRegistry $clientRegistry,
+        private readonly CookieService $cookieService,
+        private readonly UserService $userService,
+        private readonly TokenService $tokenService
+    ) {
     }
 
     #[Route('/login', name: 'oidc_login')]
@@ -53,7 +57,8 @@ class OidcController extends AbstractController
 
         try {
             $localUser = $this->userService->findOrCreate($remoteUser);
-            $internalTokenData = $this->tokenService->create($localUser, $accessToken);
+            $internalTokenData = $this->tokenService->createToken($accessToken); // create tokens
+            // issue tokens is where we connect token to the user
 
             $cookieAccess = $this->cookieService->createAccess($internalTokenData['access_token']);
             $cookieRefresh = $this->cookieService->createRefresh($internalTokenData['refresh_token']);
