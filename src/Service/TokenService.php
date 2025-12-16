@@ -95,6 +95,9 @@ readonly class TokenService
         return new Ulid();
     }
 
+    /**
+     * @throws \Exception
+     */
     private function generateExpiry(int $length = self::TOKEN_EXPIRY_1_DAY): \DateTimeImmutable
     {
         return new \DateTimeImmutable('@' . (time() + $length));
