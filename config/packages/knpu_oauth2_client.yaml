@@ -10,7 +10,7 @@ knpu_oauth2_client:
             client_id: '%env(AUTH0_OIDC_CLIENT_ID)%'
             client_secret: '%env(AUTH0_OIDC_CLIENT_SECRET)%'
             # a route name you'll create
-            redirect_route: connect_auth0_check
+            redirect_route: oidc_callback
             redirect_params: { }
             # Your custom/definite Auth0 domain, e.g. "login.mycompany.com". Set this if you use Auth0's Custom Domain feature. The "account" and "region" parameters will be ignored in this case.
             # custom_domain: null
@@ -57,7 +57,7 @@ knpu_oauth2_client:
             client_id: '%env(OKTA_OIDC_CLIENT_ID)%'
             client_secret: '%env(OKTA_OIDC_CLIENT_SECRET)%'
             # a route name you'll create
-            redirect_route: connect_okta_check
+            redirect_route: oidc_callback
             redirect_params: { }
             # Issuer URI from Okta
             issuer: https://mycompany.okta.com/oauth2/default
