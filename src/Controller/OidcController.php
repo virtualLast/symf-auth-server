@@ -11,8 +11,10 @@ use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/oidc')]
@@ -26,27 +28,34 @@ class OidcController extends AbstractController
     ) {
     }
 
-    #[Route('/login', name: 'oidc_login')]
-    public function login(): Response
+    #[Route('/login/{provider}', name: 'oidc_login')]
+    public function login(string $provider): NotFoundHttpException|RedirectResponse
     {
-        /* @var $client KeycloakClient */
-        $client = $this->clientRegistry->getClient('keycloak');
+        try {
+            $client = $this->clientRegistry->getClient($provider);
+        } catch (\InvalidArgumentException $e) {
+            return $this->createNotFoundException();
+        }
+
         return $client->redirect([
             'openid', 'profile', 'email'
         ]);
     }
 
-    #[Route('/logout', name: 'oidc_logout')]
-    public function logout(): Response
+    #[Route('/logout/{provider}', name: 'oidc_logout')]
+    public function logout(string $provider): Response
     {
         return new Response('logout.');
     }
 
-    #[Route('/callback', name: 'oidc_callback')]
-    public function callback(Request $request): Response
+    #[Route('/callback/{provider}', name: 'oidc_callback')]
+    public function callback(string $provider): NotFoundHttpException|Response
     {
-        /* @var $client KeycloakClient */
-        $client = $this->clientRegistry->getClient('keycloak');
+        try {
+            $client = $this->clientRegistry->getClient($provider);
+        } catch (\InvalidArgumentException $e) {
+            return $this->createNotFoundException();
+        }
 
         try {
             $accessToken = $client->getAccessToken();
