@@ -14,6 +14,7 @@ class UserFixtures extends Fixture
             $user = new User();
             $user->setEmail(sprintf('user_%s@example.com', $i));
             $user->setTokenSub(sprintf('token_sub_%s', $i));
+            $user->setProvider('keycloak');
             $user->setRoles(['ROLE_USER']);
             $manager->persist($user);
         }
@@ -21,24 +22,28 @@ class UserFixtures extends Fixture
         $oidcUser = new User();
         $oidcUser->setEmail('oidc_normal_user@example.local');
         $oidcUser->setTokenSub('oidc_normal_user_1');
+        $oidcUser->setProvider('keycloak');
         $oidcUser->setRoles(['ROLE_USER']);
         $manager->persist($oidcUser);
 
         $oidcAdminUser = new User();
         $oidcAdminUser->setEmail('oidc_admin_user@example.local');
         $oidcAdminUser->setTokenSub('oidc_admin_user_1');
+        $oidcAdminUser->setProvider('keycloak');
         $oidcAdminUser->setRoles(['ROLE_ADMIN']);
         $manager->persist($oidcAdminUser);
 
         $samlUser = new User();
         $samlUser->setEmail('saml_normal_user@example.local');
         $samlUser->setTokenSub('saml_normal_user_1');
+        $samlUser->setProvider('keycloak');
         $samlUser->setRoles(['ROLE_USER']);
         $manager->persist($samlUser);
 
         $samlAdminUser = new User();
         $samlAdminUser->setEmail('saml_admin_user@example.local');
         $samlAdminUser->setTokenSub('saml_admin_user_1');
+        $samlAdminUser->setProvider('keycloak');
         $samlAdminUser->setRoles(['ROLE_ADMIN']);
         $manager->persist($samlAdminUser);
 

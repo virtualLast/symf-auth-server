@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20251209211954 extends AbstractMigration
+final class Version20251216191818 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,17 +20,18 @@ final class Version20251209211954 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE app_users (id SERIAL NOT NULL, email VARCHAR(180) NOT NULL, roles JSON NOT NULL, token_sub VARCHAR(180) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, PRIMARY KEY(id))');
-        $this->addSql('CREATE UNIQUE INDEX UNIQ_C2502824812A3F80 ON app_users (token_sub)');
-        $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_EMAIL ON app_users (email)');
+        $this->addSql('CREATE TABLE app_users (id SERIAL NOT NULL, email VARCHAR(180) DEFAULT NULL, roles JSON NOT NULL, token_sub VARCHAR(180) NOT NULL, provider VARCHAR(180) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE INDEX IDX_USER_EMAIL ON app_users (email)');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_PROVIDER_SUB ON app_users (provider, token_sub)');
         $this->addSql('COMMENT ON COLUMN app_users.created_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('COMMENT ON COLUMN app_users.updated_at IS \'(DC2Type:datetime_immutable)\'');
-        $this->addSql('CREATE TABLE "token" (id SERIAL NOT NULL, user_id INT NOT NULL, local_access_token VARCHAR(255) NOT NULL, local_refresh_token VARCHAR(255) NOT NULL, local_access_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, local_refresh_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, idp_access_token TEXT DEFAULT NULL, idp_refresh_token TEXT DEFAULT NULL, idp_access_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, revoked BOOLEAN DEFAULT false NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE "token" (id SERIAL NOT NULL, user_id INT NOT NULL, local_access_token VARCHAR(255) NOT NULL, local_refresh_token VARCHAR(255) NOT NULL, local_access_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, local_refresh_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, idp_access_token TEXT DEFAULT NULL, idp_refresh_token TEXT DEFAULT NULL, idp_access_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, idp_refresh_token_expires_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, revoked BOOLEAN DEFAULT false NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_5F37A13BA76ED395 ON "token" (user_id)');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_LOCAL_REFRESH ON "token" (local_refresh_token)');
         $this->addSql('COMMENT ON COLUMN "token".local_access_token_expires_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('COMMENT ON COLUMN "token".local_refresh_token_expires_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('COMMENT ON COLUMN "token".idp_access_token_expires_at IS \'(DC2Type:datetime_immutable)\'');
+        $this->addSql('COMMENT ON COLUMN "token".idp_refresh_token_expires_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('COMMENT ON COLUMN "token".created_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('COMMENT ON COLUMN "token".updated_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('CREATE TABLE messenger_messages (id BIGSERIAL NOT NULL, body TEXT NOT NULL, headers TEXT NOT NULL, queue_name VARCHAR(190) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, available_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, delivered_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))');
