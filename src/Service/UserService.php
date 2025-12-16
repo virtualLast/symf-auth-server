@@ -16,11 +16,9 @@ readonly class UserService
     {
     }
 
-    public function findOrCreate( ResourceOwnerInterface $remoteUser ): User
+    public function findOrCreate( ResourceOwnerInterface $remoteUser, string $provider ): User
     {
-        if ($remoteUser instanceof KeycloakResourceOwner) {
-            $user = $this->findByEmail($remoteUser->getEmail());
-        }
+        $user = $this->findByTokenSub($remoteUser->getId(), $provider);
         return $user ?? $this->createUser($remoteUser);
     }
 
@@ -29,10 +27,21 @@ readonly class UserService
         return $this->userRepository->findOneBy(['email' => $email]);
     }
 
-    public function createUser( ResourceOwnerInterface $remoteUser ): User
+    public function findByTokenSub(string $tokenSub, string $provider): ?User
+    {
+        return $this->userRepository->findOneBy(
+            [
+                'tokenSub' => $tokenSub,
+                'provider' => $provider
+            ]
+        );
+    }
+
+    public function createUser( ResourceOwnerInterface $remoteUser, string $provider ): User
     {
         $user = new User();
         $user->setTokenSub($remoteUser->getId());
+        $user->setProvider($provider);
         if (
             $remoteUser instanceof KeycloakResourceOwner
             || $remoteUser instanceof Auth0ResourceOwner

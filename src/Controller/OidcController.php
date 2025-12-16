@@ -63,7 +63,7 @@ class OidcController extends AbstractController
         }
 
         try {
-            $localUser = $this->userService->findOrCreate($remoteUser);
+            $localUser = $this->userService->findOrCreate($remoteUser, $provider);
             $internalTokenData = $this->tokenService->createToken($accessToken);
             $tokenData = $this->tokenService->issueTokens($internalTokenData, $localUser);
 

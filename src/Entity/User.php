@@ -11,7 +11,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'app_users')]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PROVIDER_SUB', fields: ['provider', 'tokenSub'])]
+#[ORM\Index(name: 'IDX_USER_EMAIL', fields: ['email'])]
 #[ORM\HasLifecycleCallbacks]
 class User implements UserInterface
 {
@@ -22,7 +23,7 @@ class User implements UserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
+    #[ORM\Column(length: 180, nullable: true)]
     private ?string $email = null;
 
     /**
@@ -31,8 +32,11 @@ class User implements UserInterface
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\Column(length: 180, unique: true)]
-    private ?string $tokenSub = null; // The Keycloak "sub"
+    #[ORM\Column(length: 180, nullable: false)]
+    private ?string $tokenSub; // The Keycloak "sub"
+
+    #[ORM\Column(length: 180, nullable: false)]
+    private ?string $provider;
 
     /**
      * @var Collection<int, Token>
@@ -63,7 +67,7 @@ class User implements UserInterface
 
     public function getUserIdentifier(): string
     {
-        return $this->email;
+        return sprintf('%s_%s', $this->provider, $this->tokenSub);
     }
 
     public function getRoles(): array
@@ -91,6 +95,17 @@ class User implements UserInterface
     public function setTokenSub(string $tokenSub): static
     {
         $this->tokenSub = $tokenSub;
+        return $this;
+    }
+
+    public function getProvider(): ?string
+    {
+        return $this->provider;
+    }
+
+    public function setProvider(string $provider): static
+    {
+        $this->provider = $provider;
         return $this;
     }
 
