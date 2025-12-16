@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Enum\ProviderEnum;
 use App\Service\CookieService;
 use App\Service\TokenService;
 use App\Service\UserService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use KnpU\OAuth2ClientBundle\Client\OAuth2ClientInterface;
+use KnpU\OAuth2ClientBundle\DependencyInjection\InvalidOAuth2ClientException;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -27,13 +30,9 @@ class OidcController extends AbstractController
     }
 
     #[Route('/login/{provider}', name: 'oidc_login')]
-    public function login(string $provider): NotFoundHttpException|RedirectResponse
+    public function login(string $provider): RedirectResponse
     {
-        try {
-            $client = $this->clientRegistry->getClient($provider);
-        } catch (\InvalidArgumentException $e) {
-            return $this->createNotFoundException();
-        }
+        $client = $this->getOAuthClientOr404($provider);
 
         return $client->redirect([
             'openid', 'profile', 'email'
@@ -47,13 +46,11 @@ class OidcController extends AbstractController
     }
 
     #[Route('/callback/{provider}', name: 'oidc_callback')]
-    public function callback(string $provider): NotFoundHttpException|Response
+    public function callback(string $provider): Response
     {
-        try {
-            $client = $this->clientRegistry->getClient($provider);
-        } catch (\InvalidArgumentException $e) {
-            return $this->createNotFoundException();
-        }
+        $client = $this->getOAuthClientOr404($provider);
+
+        $provider = ProviderEnum::from($provider);
 
         try {
             $accessToken = $client->getAccessToken();
@@ -78,6 +75,21 @@ class OidcController extends AbstractController
 
         } catch (\Throwable $e) {
             return new Response(sprintf('callback error: %s', $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private function getOAuthClientOr404(string $provider): OAuth2ClientInterface
+    {
+        $providerEnum = ProviderEnum::tryFrom($provider);
+        if (!$providerEnum) {
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            return $this->clientRegistry->getClient($providerEnum->value);
+        } catch (InvalidOAuth2ClientException) {
+            // Enum exists but client is not configured
+            throw $this->createNotFoundException();
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Model\Enum\ProviderEnum;
 use App\Repository\UserRepository;
 use Foxworth42\OAuth2\Client\Provider\OktaUser;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
@@ -16,10 +17,10 @@ readonly class UserService
     {
     }
 
-    public function findOrCreate( ResourceOwnerInterface $remoteUser, string $provider ): User
+    public function findOrCreate( ResourceOwnerInterface $remoteUser, ProviderEnum $provider ): User
     {
         $user = $this->findByTokenSub($remoteUser->getId(), $provider);
-        return $user ?? $this->createUser($remoteUser);
+        return $user ?? $this->createUser($remoteUser, $provider);
     }
 
     public function findByEmail(string $email): ?User
@@ -27,7 +28,7 @@ readonly class UserService
         return $this->userRepository->findOneBy(['email' => $email]);
     }
 
-    public function findByTokenSub(string $tokenSub, string $provider): ?User
+    public function findByTokenSub(string $tokenSub, ProviderEnum $provider): ?User
     {
         return $this->userRepository->findOneBy(
             [
@@ -37,7 +38,7 @@ readonly class UserService
         );
     }
 
-    public function createUser( ResourceOwnerInterface $remoteUser, string $provider ): User
+    public function createUser( ResourceOwnerInterface $remoteUser, ProviderEnum $provider ): User
     {
         $user = new User();
         $user->setTokenSub($remoteUser->getId());

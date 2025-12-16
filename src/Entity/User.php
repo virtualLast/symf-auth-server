@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Model\Enum\ProviderEnum;
 use App\Repository\UserRepository;
 use App\Trait\CreatedUpdatedTrait;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -33,10 +34,10 @@ class User implements UserInterface
     private array $roles = [];
 
     #[ORM\Column(length: 180, nullable: false)]
-    private ?string $tokenSub; // The Keycloak "sub"
+    private string $tokenSub; // The Keycloak "sub"
 
-    #[ORM\Column(length: 180, nullable: false)]
-    private ?string $provider;
+    #[ORM\Column(type: "string", enumType: ProviderEnum::class)]
+    private ProviderEnum $provider;
 
     /**
      * @var Collection<int, Token>
@@ -67,7 +68,7 @@ class User implements UserInterface
 
     public function getUserIdentifier(): string
     {
-        return sprintf('%s_%s', $this->provider, $this->tokenSub);
+        return sprintf('%s_%s', $this->provider->value, $this->tokenSub);
     }
 
     public function getRoles(): array
@@ -98,12 +99,12 @@ class User implements UserInterface
         return $this;
     }
 
-    public function getProvider(): ?string
+    public function getProvider(): ProviderEnum
     {
         return $this->provider;
     }
 
-    public function setProvider(string $provider): static
+    public function setProvider(ProviderEnum $provider): static
     {
         $this->provider = $provider;
         return $this;

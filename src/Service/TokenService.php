@@ -68,6 +68,10 @@ readonly class TokenService
     }
 
     // attach tokens to user
+
+    /**
+     * @throws \Exception
+     */
     public function issueTokens(Token $token, User $user): Token
     {
         $token->setLocalAccessToken($this->generateToken());
