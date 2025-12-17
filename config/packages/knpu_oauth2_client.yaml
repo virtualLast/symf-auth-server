@@ -47,20 +47,3 @@ knpu_oauth2_client:
             # version: '20.0.1'
             # whether to check OAuth2 "state": defaults to true
             # use_state: true
-        # will create service: "knpu.oauth2.client.okta"
-        # an instance of: KnpU\OAuth2ClientBundle\Client\Provider\OktaClient
-        # composer require foxworth42/oauth2-okta
-        okta:
-            # must be "okta" - it activates that type!
-            type: okta
-            # add and set these environment variables in your .env files
-            client_id: '%env(OKTA_OIDC_CLIENT_ID)%'
-            client_secret: '%env(OKTA_OIDC_CLIENT_SECRET)%'
-            # a route name you'll create
-            redirect_route: oidc_callback
-            redirect_params:
-                provider: okta
-            # Issuer URI from Okta
-            issuer: https://mycompany.okta.com/oauth2/default
-            # whether to check OAuth2 "state": defaults to true
-            # use_state: true
