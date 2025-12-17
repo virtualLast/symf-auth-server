@@ -18,8 +18,11 @@ readonly class TokenService
     {
     }
 
-    // create the tokens in the db
-    public function createToken( AccessToken $accessToken ): Token
+    /**
+     * create the tokens in the db
+     * @throws \Exception
+     */
+    public function createToken(AccessToken $accessToken ): Token
     {
         $token = new Token();
         $token->setIdpAccessToken($accessToken->getToken());
@@ -58,16 +61,14 @@ readonly class TokenService
     // set revoked property on the token
     public function revokeToken(AccessToken $accessToken): bool
     {
-        $token = $this->findByIdpRefresh($accessToken->getRefreshToken());
+        $token = $this->findByLocalRefreshToken($accessToken->getRefreshToken());
         if ($token !== null) {
             $token->setRevoked(true);
             $this->tokenRepository->save($token);
-            return $this->findByIdpRefresh($accessToken->getRefreshToken())->isRevoked();
+            return $this->findByLocalRefreshToken($accessToken->getRefreshToken())->isRevoked();
         }
         return false;
     }
-
-    // attach tokens to user
 
     /**
      * @throws \Exception
@@ -83,13 +84,13 @@ readonly class TokenService
         $token->setUser($user);
         $this->tokenRepository->save($token);
 
-        return $this->findByIdpRefresh($token->getIdpRefreshToken());
+        return $this->findByLocalRefreshToken($token->getLocalRefreshToken());
     }
 
-    public function findByIdpRefresh(string $refreshToken): ?Token
+    public function findByLocalRefreshToken(string $refreshToken): ?Token
     {
         return $this->tokenRepository->findOneBy([
-            'idpRefreshToken' => $refreshToken,
+            'localRefreshToken' => $refreshToken,
             'revoked' => false
         ]);
     }
