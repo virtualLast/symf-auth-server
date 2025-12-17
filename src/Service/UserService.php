@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Model\Dto\ResourceOwnerDto;
 use App\Model\Enum\ProviderEnum;
 use App\Repository\UserRepository;
 use Foxworth42\OAuth2\Client\Provider\OktaUser;
@@ -17,10 +18,15 @@ readonly class UserService
     {
     }
 
-    public function findOrCreate( ResourceOwnerInterface $remoteUser, ProviderEnum $provider ): User
+    public function findOrCreate( ResourceOwnerDto $remoteUser ): User
     {
-        $user = $this->findByTokenSub($remoteUser->getId(), $provider);
-        return $user ?? $this->createUser($remoteUser, $provider);
+        $user = $this->findByTokenSub($remoteUser->tokenSub, $remoteUser->provider);
+
+        if ($user) {
+            return $user;
+        }
+
+        return $this->createUser($remoteUser);
     }
 
     public function findByEmail(string $email): ?User
@@ -38,18 +44,13 @@ readonly class UserService
         );
     }
 
-    public function createUser( ResourceOwnerInterface $remoteUser, ProviderEnum $provider ): User
+    public function createUser( ResourceOwnerDto $remoteUser ): User
     {
         $user = new User();
-        $user->setTokenSub($remoteUser->getId());
-        $user->setProvider($provider);
-        if (
-            $remoteUser instanceof KeycloakResourceOwner
-            || $remoteUser instanceof Auth0ResourceOwner
-            || $remoteUser instanceof OktaUser
-        ) {
-            $user->setEmail($remoteUser->getEmail());
-        }
+        $user->setProvider($remoteUser->provider);
+        $user->setTokenSub($remoteUser->tokenSub);
+        $user->setEmail($remoteUser->email);
+
         $this->userRepository->save($user);
 
         return $user;

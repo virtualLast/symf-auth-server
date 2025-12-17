@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Mapper\ResourceOwnerMapper;
 use App\Model\Enum\ProviderEnum;
 use App\Service\CookieService;
 use App\Service\TokenService;
@@ -24,7 +25,8 @@ class OidcController extends AbstractController
         private readonly ClientRegistry $clientRegistry,
         private readonly CookieService $cookieService,
         private readonly UserService $userService,
-        private readonly TokenService $tokenService
+        private readonly TokenService $tokenService,
+        private readonly ResourceOwnerMapper $resourceOwnerMapper
     ) {
     }
 
@@ -59,7 +61,9 @@ class OidcController extends AbstractController
         }
 
         try {
-            $localUser = $this->userService->findOrCreate($remoteUser, $provider);
+            $dto = $this->resourceOwnerMapper->map($remoteUser, $provider);
+            $localUser = $this->userService->findOrCreate($dto);
+
             $internalTokenData = $this->tokenService->createToken($accessToken);
             $tokenData = $this->tokenService->issueTokens($internalTokenData, $localUser);
 
@@ -73,7 +77,7 @@ class OidcController extends AbstractController
             return $response;
 
         } catch (\Throwable $e) {
-            return new Response(sprintf('callback error: %s', $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new Response(sprintf('Callback error: %s', $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
