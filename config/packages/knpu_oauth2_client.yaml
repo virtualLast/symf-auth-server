@@ -11,7 +11,8 @@ knpu_oauth2_client:
             client_secret: '%env(AUTH0_OIDC_CLIENT_SECRET)%'
             # a route name you'll create
             redirect_route: oidc_callback
-            redirect_params: { }
+            redirect_params:
+                provider: auth0
             # Your custom/definite Auth0 domain, e.g. "login.mycompany.com". Set this if you use Auth0's Custom Domain feature. The "account" and "region" parameters will be ignored in this case.
             # custom_domain: null
             # Your Auth0 domain/account, e.g. "mycompany" if your domain is "mycompany.auth0.com"
@@ -32,7 +33,8 @@ knpu_oauth2_client:
             client_secret: '%env(KEYCLOAK_OIDC_CLIENT_SECRET)%'
             # a route name you'll create
             redirect_route: oidc_callback
-            redirect_params: { }
+            redirect_params:
+                provider: keycloak
             # Keycloak server URL
             auth_server_url: http://localhost:8081
             # Keycloak realm
@@ -58,7 +60,8 @@ knpu_oauth2_client:
             client_secret: '%env(OKTA_OIDC_CLIENT_SECRET)%'
             # a route name you'll create
             redirect_route: oidc_callback
-            redirect_params: { }
+            redirect_params:
+                provider: okta
             # Issuer URI from Okta
             issuer: https://mycompany.okta.com/oauth2/default
             # whether to check OAuth2 "state": defaults to true
