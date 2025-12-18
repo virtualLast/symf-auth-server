@@ -16,11 +16,11 @@ class CookieService
             $accessToken,
             $expiry,
             '/',
-            null,
-            true,
-            true,
-            false,
-            Cookie::SAMESITE_LAX
+            $this->getDomain(),
+            $this->getSecure(),
+            $this->getHttpOnly(),
+            $this->getRaw(),
+            $this->getSameSite()
         );
     }
 
@@ -31,11 +31,36 @@ class CookieService
             $refreshToken,
             $expiry,
             '/',
-            null,
-            true,
-            true,
-            false,
-            Cookie::SAMESITE_LAX
+            $this->getDomain(),
+            $this->getSecure(),
+            $this->getHttpOnly(),
+            $this->getRaw(),
+            $this->getSameSite()
         );
+    }
+
+    private function getDomain(): ?string
+    {
+        return null;
+    }
+
+    private function getSecure(): bool
+    {
+        return true;
+    }
+
+    private function getHttpOnly(): bool
+    {
+        return true;
+    }
+
+    private function getRaw(): bool
+    {
+        return false;
+    }
+
+    private function getSameSite(): string
+    {
+        return Cookie::SAMESITE_LAX;
     }
 }
