@@ -163,8 +163,14 @@ final class TokenServiceTest extends TestCase
         $secondRefreshToken = $secondIssuedToken->getLocalRefreshToken();
 
         // assert - tokens are different
-        self::assertNotSame($firstAccessToken, $secondAccessToken);
-        self::assertNotSame($firstRefreshToken, $secondRefreshToken);
+        self::assertNotEquals(
+            $firstAccessToken,
+            $secondAccessToken
+        );
+        self::assertNotEquals(
+            $firstRefreshToken,
+            $secondRefreshToken
+        );
     }
 
     /**
@@ -172,7 +178,7 @@ final class TokenServiceTest extends TestCase
      * This is subtle but valuable in auth code.
      * @throws \Exception
      */
-    public function test_issue_tokens_persists_before_returning(): void
+    public function test_issue_tokens_returns_persisted_token_from_repository(): void
     {
         // arrange
         $token = new Token();
