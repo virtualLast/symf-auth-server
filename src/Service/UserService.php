@@ -29,11 +29,6 @@ readonly class UserService
         return $this->createUser($remoteUser);
     }
 
-    public function findByEmail(string $email): ?User
-    {
-        return $this->userRepository->findOneBy(['email' => $email]);
-    }
-
     public function findByTokenSub(string $tokenSub, ProviderEnum $provider): ?User
     {
         return $this->userRepository->findOneBy(
