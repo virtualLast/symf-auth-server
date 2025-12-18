@@ -15,7 +15,7 @@ class CookieService
             self::ACCESS_COOKIE_NAME,
             $accessToken,
             $expiry,
-            '/',
+            $this->getPath(),
             $this->getDomain(),
             $this->getSecure(),
             $this->getHttpOnly(),
@@ -30,13 +30,18 @@ class CookieService
             self::REFRESH_COOKIE_NAME,
             $refreshToken,
             $expiry,
-            '/',
+            $this->getPath(),
             $this->getDomain(),
             $this->getSecure(),
             $this->getHttpOnly(),
             $this->getRaw(),
             $this->getSameSite()
         );
+    }
+
+    private function getPath(): string
+    {
+        return '/';
     }
 
     private function getDomain(): ?string
