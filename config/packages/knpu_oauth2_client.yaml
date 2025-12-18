@@ -47,3 +47,20 @@ knpu_oauth2_client:
             # version: '20.0.1'
             # whether to check OAuth2 "state": defaults to true
             # use_state: true
+#        lightfoot:
+#            type: generic
+#            provider_class: App\OAuth\Client\Provider\LightfootProvider
+#
+#            # optional: a class that extends OAuth2Client
+#            # client_class: Some\Custom\Client
+#
+#            # optional: if your provider has custom constructor options
+#            # provider_options: {}
+#
+#            # now, all the normal options!
+#            client_id: '%env(LIGHTFOOT_OIDC_CLIENT_ID)%'
+#            client_secret: '%env(LIGHTFOOT_OIDC_CLIENT_SECRET)%'
+#            redirect_route: lightfoot_callback
+#            redirect_params: { }
+#            # whether to check OAuth2 "state": defaults to true
+#            # use_state: true

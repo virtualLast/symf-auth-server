@@ -1,0 +1,263 @@
+{
+    "realm": "tesco-realm",
+    "enabled": true,
+    "components": {
+        "org.keycloak.userprofile.UserProfileProvider": [
+            {
+                "providerId": "declarative-user-profile",
+                "subComponents": {},
+                "config": {
+                    "kc.user.profile.config": [
+                        "{\n  \"attributes\": [\n    {\n      \"name\": \"username\",\n      \"displayName\": \"${username}\",\n      \"validations\": {\n        \"length\": { \"min\": 3, \"max\": 255 },\n        \"username-prohibited-characters\": {},\n        \"up-username-not-idn-homograph\": {}\n      },\n      \"permissions\": {\n        \"view\": [\"admin\", \"user\"],\n        \"edit\": [\"admin\", \"user\"]\n      },\n      \"multivalued\": false\n    },\n    {\n      \"name\": \"email\",\n      \"displayName\": \"${email}\",\n      \"validations\": {\n        \"email\": {},\n        \"length\": { \"max\": 255 }\n      },\n      \"required\": { \"roles\": [\"user\"] },\n      \"permissions\": {\n        \"view\": [\"admin\", \"user\"],\n        \"edit\": [\"admin\", \"user\"]\n      },\n      \"multivalued\": false\n    },\n    {\n      \"name\": \"firstName\",\n      \"displayName\": \"${firstName}\",\n      \"validations\": {\n        \"length\": { \"max\": 255 },\n        \"person-name-prohibited-characters\": {}\n      },\n      \"required\": { \"roles\": [\"user\"] },\n      \"permissions\": {\n        \"view\": [\"admin\", \"user\"],\n        \"edit\": [\"admin\", \"user\"]\n      },\n      \"multivalued\": false\n    },\n    {\n      \"name\": \"lastName\",\n      \"displayName\": \"${lastName}\",\n      \"validations\": {\n        \"length\": { \"max\": 255 },\n        \"person-name-prohibited-characters\": {}\n      },\n      \"required\": { \"roles\": [\"user\"] },\n      \"permissions\": {\n        \"view\": [\"admin\", \"user\"],\n        \"edit\": [\"admin\", \"user\"]\n      },\n      \"multivalued\": false\n    },\n    {\n      \"name\": \"params\",\n      \"displayName\": \"params\",\n      \"validations\": {},\n      \"annotations\": {},\n      \"permissions\": {\n        \"view\": [\"admin\"],\n        \"edit\": [\"admin\"]\n      },\n      \"group\": \"user-metadata\",\n      \"multivalued\": false\n    }\n  ],\n  \"groups\": [\n    {\n      \"name\": \"user-metadata\",\n      \"displayHeader\": \"User metadata\",\n      \"displayDescription\": \"Attributes, which refer to user metadata\"\n    }\n  ]\n}\n"
+                    ]
+                }
+            }
+        ]
+    },
+    "clientScopes": [
+        {
+            "name": "params",
+            "description": "Params object containing AccessLevel and HierCode information",
+            "protocol": "openid-connect",
+            "protocolMappers": [
+                {
+                    "name": "params",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-usermodel-attribute-mapper",
+                    "consentRequired": false,
+                    "config": {
+                        "user.attribute": "params",
+                        "claim.name": "params",
+                        "jsonType.label": "JSON",
+                        "id.token.claim": "true",
+                        "access.token.claim": "true",
+                        "userinfo.token.claim": "true",
+                        "multivalued": "false"
+                    }
+                }
+            ]
+        }
+    ],
+    "clients": [
+        {
+            "clientId": "keycloak-tesco-client",
+            "protocol": "openid-connect",
+            "name": "keycloak Tesco Client",
+            "publicClient": false,
+            "secret": "yzd@apk.DBN5nvn6urc",
+            "standardFlowEnabled": true,
+            "directAccessGrantsEnabled": false,
+            "redirectUris": [
+                "https://localhost:8000/oidc/callback/keycloak"
+            ],
+            "webOrigins": [],
+            "defaultClientScopes": [
+                "profile"
+            ],
+            "optionalClientScopes": [
+                "params",
+                "email"
+            ]
+        }
+    ],
+    "users": [
+        {
+            "username": "fleet.admin.allstores",
+            "firstName": "FleetAdmin",
+            "lastName": "AllStores",
+            "email": "fleet.admin.allstores@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-AllUK_FleetAdmin\"],\n  \"HierCode\": []\n}"
+            }
+        },
+        {
+            "username": "fleet.admin.allstores.group.store",
+            "firstName": "FleetAdmin",
+            "lastName": "AllStoresGroupStore",
+            "email": "fleet.admin.allstores.group.store@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-AllUK_FleetAdmin\"],\n  \"HierCode\": [\n    \"GG-XX-TescoGlobal-HierCode UK01001\",\n    \"GG-XX-TescoGlobal-HierCode UKGP001\"\n  ]\n}"
+            }
+        },
+        {
+            "username": "fleet.admin.store.1001",
+            "firstName": "FleetAdmin",
+            "lastName": "Store1001",
+            "email": "fleet.admin.store.1001@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_FleetAdmin\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UK01001\"]\n}"
+            }
+        },
+        {
+            "username": "fleet.admin.multiple.stores",
+            "firstName": "FleetAdmin",
+            "lastName": "MultipleStores",
+            "email": "fleet.admin.multiple.stores@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_FleetAdmin\"],\n  \"HierCode\": [\n    \"GG-XX-TescoGlobal-HierCode UK01001\",\n    \"GG-XX-TescoGlobal-HierCode UK01101\"\n  ]\n}"
+            }
+        },
+        {
+            "username": "fleet.admin.group",
+            "firstName": "FleetAdmin",
+            "lastName": "Group",
+            "email": "fleet.admin.group@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_FleetAdmin\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UKGP001\"]\n}"
+            }
+        },
+        {
+            "username": "read.only.store.1001",
+            "firstName": "ReadOnly",
+            "lastName": "Store1001",
+            "email": "read.only.store.1001@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_ReadOnly\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UK01001\"]\n}"
+            }
+        },
+        {
+            "username": "read.only.group",
+            "firstName": "ReadOnly",
+            "lastName": "Group",
+            "email": "read.only.group@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_ReadOnly\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UKGP001\"]\n}"
+            }
+        },
+        {
+            "username": "read.only.allstores",
+            "firstName": "ReadOnly",
+            "lastName": "AllStores",
+            "email": "read.only.allstores@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-AllUK_ReadOnly\"],\n  \"HierCode\": []\n}"
+            }
+        },
+        {
+            "username": "vehicle.maintenance.store.1001",
+            "firstName": "VehicleMaintenance",
+            "lastName": "Store1001",
+            "email": "vehicle.maintenance.store.1001@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_VehicleMaintenance\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UK01001\"]\n}"
+            }
+        },
+        {
+            "username": "invalid.permission",
+            "firstName": "InvalidPermission",
+            "lastName": "User",
+            "email": "invalid.permission@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-DifferentCompany-Filter_ReadOnly\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UK01001\"]\n}"
+            }
+        },
+        {
+            "username": "invalid.fleet.level",
+            "firstName": "InvalidFleetLevel",
+            "lastName": "User",
+            "email": "invalid.fleet.level@lightfoot.co.uk",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "attributes": {
+                "params": "{\n  \"AccessLevel\": [\"GG-XX-TescoGlobal-LightFoot_PRD-Filter_FleetAdmin\"],\n  \"HierCode\": [\"GG-XX-TescoGlobal-HierCode UK9999\"]\n}"
+            }
+        }
+    ]
+}
