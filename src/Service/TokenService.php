@@ -37,38 +37,20 @@ readonly class TokenService
         return $token;
     }
 
-    public function refreshToken(Token $token): bool
+    public function revokeToken(AccessToken $accessToken): bool
     {
-        /**
-         * Check the local refresh token expiry.
-         *
-         * If the current time is before that expiry:
-         *
-         * Use the refresh token to request a new access token from the IdP.
-         *
-         * Update your local access token value.
-         *
-         * Update the local access token expiry based on the new token’s lifetime.
-         *
-         * If the refresh token has expired, the user must re-authenticate via the IdP.
-         *
-         * This way your local tokens stay in sync with the IdP, but you never expose the IdP refresh token to the client.
-         */
+        $token = $this->findByLocalRefreshToken($accessToken->getRefreshToken());
+
+        if ($token === null) {
+            return false;
+        }
+
+        $token->setRevoked(true);
+        $this->tokenRepository->save($token);
 
         return true;
     }
 
-    // set revoked property on the token
-    public function revokeToken(AccessToken $accessToken): bool
-    {
-        $token = $this->findByLocalRefreshToken($accessToken->getRefreshToken());
-        if ($token !== null) {
-            $token->setRevoked(true);
-            $this->tokenRepository->save($token);
-            return $this->findByLocalRefreshToken($accessToken->getRefreshToken())->isRevoked();
-        }
-        return false;
-    }
 
     /**
      * @throws \Exception
