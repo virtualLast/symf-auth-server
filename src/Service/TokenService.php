@@ -28,9 +28,7 @@ readonly class TokenService
         $token->setIdpAccessToken($accessToken->getToken());
         $token->setIdpRefreshToken($accessToken->getRefreshToken());
 
-        $expiry = new \DateTimeImmutable();
-        $expiry->setTimestamp($accessToken->getExpires());
-        $token->setIdpAccessTokenExpiresAt($expiry);
+        $token->setIdpAccessTokenExpiresAt((new \DateTimeImmutable())->setTimestamp($accessToken->getExpires()));
 
         $token->setIdpRefreshTokenExpiresAt($this->generateExpiry(self::TOKEN_EXPIRY_1_MONTH));
 
@@ -43,6 +41,9 @@ readonly class TokenService
 
         if ($token === null) {
             return false;
+        }
+        if ($token->isRevoked() === true) {
+            return true;
         }
 
         $token->setRevoked(true);
@@ -87,6 +88,6 @@ readonly class TokenService
      */
     private function generateExpiry(int $length = self::TOKEN_EXPIRY_1_DAY): \DateTimeImmutable
     {
-        return new \DateTimeImmutable('@' . (time() + $length));
+        return (new \DateTimeImmutable())->setTimestamp(time() + $length);
     }
 }
