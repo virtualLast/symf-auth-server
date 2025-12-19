@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Mapper\ResourceOwnerMapper;
 use App\Model\Enum\ProviderEnum;
 use App\Service\CookieService;
+use App\Service\ScopeService;
 use App\Service\TokenService;
 use App\Service\UserService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
@@ -26,7 +27,8 @@ class OidcController extends AbstractController
         private readonly CookieService $cookieService,
         private readonly UserService $userService,
         private readonly TokenService $tokenService,
-        private readonly ResourceOwnerMapper $resourceOwnerMapper
+        private readonly ResourceOwnerMapper $resourceOwnerMapper,
+        private readonly ScopeService $scopeService
     ) {
     }
 
@@ -34,12 +36,10 @@ class OidcController extends AbstractController
     public function login(string $provider): RedirectResponse
     {
         $client = $this->getOAuthClientOr404($provider);
-        return $client->redirect([
-            'openid',
-            'profile',
-            'email',
-            'params'
-        ]);
+        $providerEnum = ProviderEnum::from($provider);
+        $scopes = $this->scopeService->getScopesForProvider($providerEnum);
+
+        return $client->redirect($scopes);
     }
 
     #[Route('/logout/{provider}', name: 'oidc_logout')]
