@@ -10,5 +10,7 @@ final readonly class ResourceOwnerDto
         public ProviderEnum $provider,
         public string $tokenSub,
         public ?string $email,
+        public ?array $accessLevels = null,
+        public ?array $userRoles = null
     ) {}
 }

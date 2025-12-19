@@ -64,3 +64,4 @@ class ScopeServiceTest extends TestCase
     }
 }
 
+

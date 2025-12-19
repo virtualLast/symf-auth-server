@@ -8,6 +8,7 @@ use App\Mapper\ResourceOwnerMapper;
 use App\Model\Enum\ProviderEnum;
 use App\Service\CookieService;
 use App\Service\ScopeService;
+use App\Service\TokenParamsService;
 use App\Service\TokenService;
 use App\Service\UserService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
@@ -22,6 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/oidc')]
 class OidcController extends AbstractController
 {
+
     public function __construct(
         private readonly ClientRegistry $clientRegistry,
         private readonly CookieService $cookieService,
@@ -29,7 +31,7 @@ class OidcController extends AbstractController
         private readonly TokenService $tokenService,
         private readonly ResourceOwnerMapper $resourceOwnerMapper,
         private readonly ScopeService $scopeService,
-        private readonly TokenParseFactory $tokenParseFactory,
+        private readonly TokenParamsService $tokenParamsService,
     ) {
     }
 
@@ -63,11 +65,16 @@ class OidcController extends AbstractController
             return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $parser = $this->tokenParseFactory->getParser($provider);
-        $parsedParams = $parser->parse($remoteUser);
+        try {
+            $accessRoles = $this->tokenParamsService->parse($remoteUser, $provider);
+        } catch (\Throwable $e) {
+            return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
         try {
-            $dto = $this->resourceOwnerMapper->map($remoteUser, $provider);
+            // todo update the resourceOwner mapper to use the AccessLevel stuff
+            $dto = $this->resourceOwnerMapper->map($remoteUser, $provider, $accessRoles);
+            // todo findOrCreate needs to update the roles / permissions
             $localUser = $this->userService->findOrCreate($dto);
 
             $internalTokenData = $this->tokenService->createToken($accessToken);

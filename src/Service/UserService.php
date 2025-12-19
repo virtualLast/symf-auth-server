@@ -23,7 +23,8 @@ readonly class UserService
         $user = $this->findByTokenSub($remoteUser->tokenSub, $remoteUser->provider);
 
         if ($user) {
-            return $user;
+            // synchronize roles + permissions + persist, should return updated user
+            return $this->synchronizeUserAccessRoles($user, $remoteUser);
         }
 
         return $this->createUser($remoteUser);
@@ -45,6 +46,18 @@ readonly class UserService
         $user->setProvider($remoteUser->provider);
         $user->setTokenSub($remoteUser->tokenSub);
         $user->setEmail($remoteUser->email);
+
+        // set up roles + permissions
+
+        $this->userRepository->save($user);
+
+        return $user;
+    }
+
+    private function synchronizeUserAccessRoles(User $user, ResourceOwnerDto $resourceOwnerDto): User
+    {
+        $user->setAccessRoles($resourceOwnerDto->accessLevels);
+        $user->setRoles($resourceOwnerDto->userRoles);
 
         $this->userRepository->save($user);
 
