@@ -52,11 +52,12 @@
             ],
             "webOrigins": [],
             "defaultClientScopes": [
-                "profile"
+                "openid",
+                "profile",
+                "email"
             ],
             "optionalClientScopes": [
-                "params",
-                "email"
+                "params"
             ]
         }
     ],

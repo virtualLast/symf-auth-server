@@ -76,6 +76,6 @@ class ResourceOwnerMapperTest extends TestCase
 
     private function createProvider(): ProviderEnum
     {
-        return ProviderEnum::KEYCLOAK;
+        return ProviderEnum::KEYCLOAK_LOCAL;
     }
 }

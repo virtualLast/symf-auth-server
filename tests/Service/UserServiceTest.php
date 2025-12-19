@@ -55,7 +55,7 @@ class UserServiceTest extends TestCase
 
         // assert
         self::assertNotNull($user);
-        self::assertEquals(ProviderEnum::KEYCLOAK, $user->getProvider());
+        self::assertEquals(ProviderEnum::KEYCLOAK_LOCAL, $user->getProvider());
         self::assertEquals('super-secret-token-sub-value', $user->getTokenSub());
     }
 
@@ -70,6 +70,6 @@ class UserServiceTest extends TestCase
 
     private function createProvider(): ProviderEnum
     {
-        return ProviderEnum::KEYCLOAK;
+        return ProviderEnum::KEYCLOAK_LOCAL;
     }
 }
