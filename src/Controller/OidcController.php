@@ -34,9 +34,8 @@ class OidcController extends AbstractController
     public function login(string $provider): RedirectResponse
     {
         $client = $this->getOAuthClientOr404($provider);
-
         return $client->redirect([
-            'openid', 'profile', 'email'
+            'openid'
         ]);
     }
 
