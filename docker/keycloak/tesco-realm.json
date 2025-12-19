@@ -48,7 +48,7 @@
             "standardFlowEnabled": true,
             "directAccessGrantsEnabled": false,
             "redirectUris": [
-                "https://localhost:8000/oidc/callback/keycloak"
+                "https://localhost:8000/oidc/callback/keycloak_tesco"
             ],
             "webOrigins": [],
             "defaultClientScopes": [

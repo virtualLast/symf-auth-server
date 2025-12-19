@@ -23,7 +23,7 @@ knpu_oauth2_client:
         # will create service: "knpu.oauth2.client.keycloak"
         # an instance of: KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient
         # composer require stevenmaguire/oauth2-keycloak
-        keycloak-local:
+        keycloak_local:
             # must be "keycloak" - it activates that type!
             type: keycloak
             # add and set these environment variables in your .env files
@@ -32,7 +32,7 @@ knpu_oauth2_client:
             # a route name you'll create
             redirect_route: oidc_callback
             redirect_params:
-                provider: keycloak
+                provider: keycloak_local
             # Keycloak server URL
             auth_server_url: http://localhost:8081
             # Keycloak realm
@@ -51,16 +51,16 @@ knpu_oauth2_client:
         # will create service: "knpu.oauth2.client.keycloak"
         # an instance of: KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient
         # composer require stevenmaguire/oauth2-keycloak
-        keycloak-tesco:
+        keycloak_tesco:
             # must be "keycloak" - it activates that type!
             type: keycloak
             # add and set these environment variables in your .env files
-            client_id: '%env(KEYCLOAK_OIDC_CLIENT_ID)%'
-            client_secret: '%env(KEYCLOAK_OIDC_CLIENT_SECRET)%'
+            client_id: '%env(KEYCLOAK_TESCO_OIDC_CLIENT_ID)%'
+            client_secret: '%env(KEYCLOAK_TESCO_OIDC_CLIENT_SECRET)%'
             # a route name you'll create
             redirect_route: oidc_callback
             redirect_params:
-                provider: keycloak
+                provider: keycloak_tesco
             # Keycloak server URL
             auth_server_url: http://localhost:8081
             # Keycloak realm
