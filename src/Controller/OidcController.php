@@ -28,7 +28,8 @@ class OidcController extends AbstractController
         private readonly UserService $userService,
         private readonly TokenService $tokenService,
         private readonly ResourceOwnerMapper $resourceOwnerMapper,
-        private readonly ScopeService $scopeService
+        private readonly ScopeService $scopeService,
+        private readonly TokenParseFactory $tokenParseFactory,
     ) {
     }
 
@@ -57,10 +58,13 @@ class OidcController extends AbstractController
 
         try {
             $accessToken = $client->getAccessToken();
-            $remoteUser = $client->fetchUserFromToken($accessToken);
+            $remoteUser = $client->fetchUserFromToken($accessToken); // contains params['AccessLevel', 'HierCode']
         } catch (IdentityProviderException $e) {
             return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+
+        $parser = $this->tokenParseFactory->getParser($provider);
+        $parsedParams = $parser->parse($remoteUser);
 
         try {
             $dto = $this->resourceOwnerMapper->map($remoteUser, $provider);
