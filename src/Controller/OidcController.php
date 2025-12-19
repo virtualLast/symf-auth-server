@@ -35,7 +35,10 @@ class OidcController extends AbstractController
     {
         $client = $this->getOAuthClientOr404($provider);
         return $client->redirect([
-            'openid'
+            'openid',
+            'profile',
+            'email',
+            'params'
         ]);
     }
 

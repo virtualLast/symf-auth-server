@@ -42,19 +42,17 @@
         {
             "clientId": "keycloak-tesco-client",
             "protocol": "openid-connect",
-            "name": "keycloak Tesco Client",
-            "publicClient": false,
             "secret": "yzd@apk.DBN5nvn6urc",
+            "name": "keycloak Tesco Client",
+            "enabled": true,
+            "publicClient": false,
             "standardFlowEnabled": true,
             "directAccessGrantsEnabled": false,
             "redirectUris": [
                 "https://localhost:8000/oidc/callback/keycloak_tesco"
             ],
-            "webOrigins": [],
-            "defaultClientScopes": [
-                "openid",
-                "profile",
-                "email"
+            "webOrigins": [
+                "https://localhost:8000"
             ],
             "optionalClientScopes": [
                 "params"
