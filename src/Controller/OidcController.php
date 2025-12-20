@@ -72,9 +72,7 @@ class OidcController extends AbstractController
         }
 
         try {
-            // todo update the resourceOwner mapper to use the AccessLevel stuff
             $dto = $this->resourceOwnerMapper->map($remoteUser, $provider, $accessRoles);
-            // todo findOrCreate needs to update the roles / permissions
             $localUser = $this->userService->findOrCreate($dto);
 
             $internalTokenData = $this->tokenService->createToken($accessToken);
