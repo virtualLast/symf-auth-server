@@ -7,6 +7,7 @@ use App\Repository\UserRepository;
 use App\Trait\CreatedUpdatedTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -30,8 +31,14 @@ class User implements UserInterface
     /**
      * @var list<string>
      */
-    #[ORM\Column]
-    private array $roles = [];
+    #[ORM\Column(type: Types::JSON, options: ['default' => '["ROLE_USER"]'])]
+    private array $roles = ['ROLE_USER'];
+
+    /**
+     * @var list<string>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $accessLevels = null;
 
     #[ORM\Column(length: 180, nullable: false)]
     private string $tokenSub; // The Keycloak "sub"
@@ -74,7 +81,11 @@ class User implements UserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
+        
+        // Ensure ROLE_USER is always present (security measure)
+        if (!in_array('ROLE_USER', $roles, true)) {
+            $roles[] = 'ROLE_USER';
+        }
 
         return array_unique($roles);
     }
@@ -107,6 +118,17 @@ class User implements UserInterface
     public function setProvider(ProviderEnum $provider): static
     {
         $this->provider = $provider;
+        return $this;
+    }
+
+    public function getAccessLevels(): ?array
+    {
+        return $this->accessLevels;
+    }
+
+    public function setAccessLevels(?array $accessLevels): static
+    {
+        $this->accessLevels = $accessLevels;
         return $this;
     }
 
