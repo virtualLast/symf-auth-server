@@ -6,16 +6,14 @@ use App\Entity\User;
 use App\Model\Dto\ResourceOwnerDto;
 use App\Model\Enum\ProviderEnum;
 use App\Repository\UserRepository;
-use Foxworth42\OAuth2\Client\Provider\OktaUser;
-use League\OAuth2\Client\Provider\ResourceOwnerInterface;
-use Riskio\OAuth2\Client\Provider\Auth0ResourceOwner;
-use Stevenmaguire\OAuth2\Client\Provider\KeycloakResourceOwner;
 
 readonly class UserService
 {
 
-    public function __construct(private UserRepository $userRepository)
-    {
+    public function __construct(
+        private UserRepository $userRepository,
+        private AccessLevelRoleMapper $roleMapper
+    ) {
     }
 
     public function findOrCreate( ResourceOwnerDto $remoteUser ): User
@@ -23,7 +21,6 @@ readonly class UserService
         $user = $this->findByTokenSub($remoteUser->tokenSub, $remoteUser->provider);
 
         if ($user) {
-            // synchronize roles + permissions + persist, should return updated user
             return $this->synchronizeUserAccessRoles($user, $remoteUser);
         }
 
@@ -40,14 +37,14 @@ readonly class UserService
         );
     }
 
-    public function createUser( ResourceOwnerDto $remoteUser ): User
+    public function createUser(ResourceOwnerDto $remoteUser): User
     {
         $user = new User();
         $user->setProvider($remoteUser->provider);
         $user->setTokenSub($remoteUser->tokenSub);
         $user->setEmail($remoteUser->email);
 
-        // set up roles + permissions
+        $this->applyAccessRoles($user, $remoteUser);
 
         $this->userRepository->save($user);
 
@@ -56,11 +53,32 @@ readonly class UserService
 
     private function synchronizeUserAccessRoles(User $user, ResourceOwnerDto $resourceOwnerDto): User
     {
-        $user->setAccessRoles($resourceOwnerDto->accessLevels);
-        $user->setRoles($resourceOwnerDto->userRoles);
+        // Update email if changed
+        if ($resourceOwnerDto->email !== null) {
+            $user->setEmail($resourceOwnerDto->email);
+        }
+
+        // Update access roles
+        $this->applyAccessRoles($user, $resourceOwnerDto);
 
         $this->userRepository->save($user);
 
         return $user;
+    }
+
+    private function applyAccessRoles(User $user, ResourceOwnerDto $resourceOwnerDto): void
+    {
+        // Store raw access levels
+        $user->setAccessLevels($resourceOwnerDto->accessLevels);
+
+        if (
+            count($resourceOwnerDto->userRoles) > 0
+        ) {
+            $roles = $this->roleMapper->mapToRoles($resourceOwnerDto->userRoles);
+            $user->setRoles(array_unique($roles));
+        } else {
+            // Default role for users without hier codes
+            $user->setRoles(['ROLE_USER']);
+        }
     }
 }
