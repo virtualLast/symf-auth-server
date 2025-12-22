@@ -89,11 +89,11 @@ class SamlController extends AbstractController
             $dto = $this->resourceOwnerMapper->map($remoteUser, ProviderEnum::KEYCLOAK_SAML);
             $localUser = $this->userService->findOrCreate($dto);
 
-            $internalTokenData = $this->tokenService->createSamlToken();
+            $internalTokenData = $this->tokenService->createSimpleToken();
             $tokenData = $this->tokenService->issueTokens($internalTokenData, $localUser);
 
             $cookieAccess = $this->cookieService->createAccess($tokenData->getLocalAccessToken(), $tokenData->getLocalAccessTokenExpiresAt());
-            $cookieRefresh = $this->cookieService->createRefresh($tokenData->getLocalRefreshToken(), $tokenData->getLocalRefreshTokenExpiresAt());
+            $cookieRefresh = $this->cookieService->createRefresh($tokenData->getRawLocalRefreshToken(), $tokenData->getLocalRefreshTokenExpiresAt());
 
             $response = $this->redirectToRoute('app_dashboard_index');
             $response->headers->setCookie($cookieAccess);
