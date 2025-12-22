@@ -10,11 +10,8 @@ use App\Model\Enum\ProviderEnum;
 use App\OAuth\Exception\OauthException;
 use App\Service\CookieService;
 use App\Service\MetadataService;
-use App\Service\ScopeService;
-use App\Service\TokenParamsService;
 use App\Service\TokenService;
 use App\Service\UserService;
-use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Error;
 use OneLogin\Saml2\ValidationError;
@@ -80,7 +77,7 @@ class SamlController extends AbstractController
         $errors = $auth->getErrors();
         if(count($errors) > 0) {
             $this->logger->error('Saml2 Error: ' . implode(', ', $errors));
-            throw new OAuthException('Acs SAML error', Response::HTTP_INTERNAL_SERVER_ERROR);
+            throw new OauthException('Acs SAML error', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $nameId = $auth->getNameId();
@@ -106,7 +103,7 @@ class SamlController extends AbstractController
 
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
-            throw new OAuthException('Token Issuance SAML error', Response::HTTP_INTERNAL_SERVER_ERROR);
+            throw new OauthException('Token Issuance SAML error', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -126,7 +123,7 @@ class SamlController extends AbstractController
 
         if (count($errors) > 0) {
             $this->logger->error('Invalid SP metadata: ' . implode(', ', $errors));
-            throw new OAuthException('Invalid SAML Provider metadata');
+            throw new OauthException('Invalid SAML Provider metadata');
         }
 
         return new Response($metadata, Response::HTTP_OK, ['Content-Type' => 'application/xml']);
@@ -146,7 +143,7 @@ class SamlController extends AbstractController
             return new Auth($settings);
         } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
             $this->logger->error($e->getMessage());
-            throw new OAuthException('Unable to create SAML Auth instance', Response::HTTP_INTERNAL_SERVER_ERROR);
+            throw new OauthException('Unable to create SAML Auth instance', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
