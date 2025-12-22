@@ -13,7 +13,6 @@ readonly class TokenService
 
     private const TOKEN_EXPIRY_1_DAY = 86400;
     private const TOKEN_EXPIRY_1_MONTH = 2592000;
-    private const REFRESH_TOKEN_HASH = '';
     private const REFRESH_TOKEN_HASH_ALGO = 'sha512';
 
     public function __construct(

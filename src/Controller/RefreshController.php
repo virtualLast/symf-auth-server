@@ -33,7 +33,8 @@ class RefreshController
     #[Route('/', name: 'app_refresh')]
     public function refresh(Request $request): Response
     {
-        $refreshToken = $request->attributes->get(self::REFRESH_TOKEN_REQUEST_ATTRIBUTE);
+        $data = json_decode($request->getContent(), true);
+        $refreshToken = $data[self::REFRESH_TOKEN_REQUEST_ATTRIBUTE] ?? null;
         if($refreshToken === null) {
             throw new OauthException('Refresh token not found', Response::HTTP_BAD_REQUEST);
         }
@@ -43,6 +44,12 @@ class RefreshController
         if($tokenData === null) {
             $this->logger->error(sprintf('Refresh token (%s) not found', $refreshToken));
             throw new OauthException('Refresh token not found', Response::HTTP_BAD_REQUEST);
+        }
+        if ($tokenData->isRevoked()) {
+            throw new OauthException('Refresh token revoked', Response::HTTP_BAD_REQUEST);
+        }
+        if ($tokenData->getLocalRefreshTokenExpiresAt() < new \DateTimeImmutable()) {
+            throw new OauthException('Refresh token expired', Response::HTTP_BAD_REQUEST);
         }
         // call to user service to find user, use the user we get from the token
         $user = $tokenData->getUser();
