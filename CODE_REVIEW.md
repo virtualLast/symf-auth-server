@@ -1,0 +1,665 @@
+# Code Review - Symfony Auth Server
+
+**Reviewer:** AI Code Review  
+**Project:** Symfony 7.3 Authentication Server (SAML 2.0 + OIDC)
+
+---
+
+## Executive Summary
+
+The codebase demonstrates a solid foundation with clean architecture, modern PHP practices, and good separation of concerns. However, there are **critical security gaps** that must be addressed before production deployment, particularly around Symfony Security integration and error handling.
+
+**Overall Assessment:** ⚠️ **Good foundation, but requires security hardening**
+
+---
+
+## Strengths
+
+### 1. Architecture & Design
+- ✅ Clean separation of concerns (Controllers, Services, Entities, Mappers, DTOs)
+- ✅ Proper use of dependency injection throughout
+- ✅ Good use of value objects (DTOs) and enums
+- ✅ Clear separation between SAML and OIDC flows
+
+### 2. Code Quality
+- ✅ Modern PHP 8.2+ features (strict types, readonly classes, enums, attributes)
+- ✅ Strong typing with DTOs and enums
+- ✅ Proper use of Doctrine lifecycle callbacks
+- ✅ Good database design with proper relationships and constraints
+
+### 3. Best Practices
+- ✅ Constructor injection for dependencies
+- ✅ Repository pattern implementation
+- ✅ Service layer abstraction
+- ✅ Proper use of readonly classes where appropriate
+
+---
+
+## Critical Issues 🔴
+
+### 1. Missing Symfony Security Integration
+
+**Location:** `config/packages/security.yaml`
+
+**Issue:**
+- No authentication mechanism configured in firewall
+- No access control rules defined
+- SAML/OIDC sessions not integrated with Symfony Security
+- Dashboard is publicly accessible without authentication
+
+**Current State:**
+```yaml
+firewalls:
+    main:
+        lazy: true
+        provider: app_user_provider
+        # No authentication mechanism!
+```
+
+**Impact:** 🔴 **CRITICAL** - Application has no authentication enforcement
+
+**Recommendation:**
+1. Implement custom authenticator for SAML/OIDC sessions
+2. Configure firewall to require authentication
+3. Add access control rules for protected routes
+4. Integrate token validation with Symfony Security
+
+**Priority:** **HIGH** - Must fix before production
+
+---
+
+### 2. Error Handling Exposes Sensitive Information
+
+**Location:** `src/Controller/OidcController.php` (lines 64-66, 70-72, 90-92)
+
+**Issue:**
+- Error messages exposed directly to users
+- No error logging
+- Stack traces may leak in development mode
+- Generic error handling loses context
+
+**Current Code:**
+```php
+} catch (IdentityProviderException $e) {
+    return new Response('callback error: '.$e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+}
+```
+
+**Impact:** 🔴 **HIGH** - Security risk and poor user experience
+
+**Recommendation:**
+1. Log all errors with full context
+2. Return generic user-friendly messages
+3. Use Symfony's error handling system
+4. Create custom error pages
+
+**Priority:** **HIGH**
+
+---
+
+### 3. SAML Error Handling Issues
+
+**Location:** `src/Controller/SamlController.php` (lines 80-83, 43-45)
+
+**Issue:**
+- Exceptions thrown without logging
+- No user-friendly error pages
+- Generic error messages lose debugging context
+
+**Current Code:**
+```php
+$errors = $auth->getErrors();
+if(count($errors) > 0) {
+    throw new Error('Saml2 Error: ' . implode(', ', $errors));
+}
+```
+
+**Impact:** 🔴 **HIGH** - Poor error handling and debugging
+
+**Recommendation:**
+1. Log SAML errors with full context
+2. Create error event listeners
+3. Return user-friendly error pages
+4. Preserve error details in logs only
+
+**Priority:** **HIGH**
+
+---
+
+### 4. Token Storage Security Concerns
+
+**Location:** `src/Service/TokenService.php`, `src/Service/CookieService.php`
+
+**Issue:**
+- Internal tokens stored as plain ULIDs (no signature/encryption)
+- Tokens stored in database as plain strings
+- No token validation mechanism
+- No token revocation endpoint (except stub)
+
+**Current Implementation:**
+- Tokens are ULIDs: `new Ulid()`
+- Stored in cookies (secure, but tokens themselves aren't signed)
+- No JWT or signed token format
+
+**Impact:** 🟡 **MEDIUM** - Tokens could be forged if database is compromised
+
+**Recommendation:**
+1. Consider JWT with signing for internal tokens
+2. Implement token validation middleware
+3. Add token signature/encryption
+4. Implement proper token refresh flow
+
+**Priority:** **MEDIUM** (depends on threat model)
+
+---
+
+## Code Quality Issues 🟡
+
+### 5. Inconsistent Error Handling
+
+**Location:** `src/Controller/SamlController.php` (line 43)
+
+**Issue:**
+- Catching too many exception types in one catch block
+- Generic error messages lose context
+- No distinction between recoverable and fatal errors
+
+**Current Code:**
+```php
+} catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
+    throw new Error('Unable to create OneLogin_Saml2_Auth instance: ' . $e->getMessage());
+}
+```
+
+**Recommendation:**
+- Handle specific exceptions separately
+- Log with context before rethrowing
+- Use custom exception types
+
+**Priority:** **MEDIUM**
+
+---
+
+### 6. Hardcoded Configuration Values
+
+**Location:** 
+- `src/Service/MetadataService.php` (line 19)
+- `config/saml/settings.php` (multiple hardcoded URLs)
+
+**Issue:**
+- Hardcoded URLs should be environment variables
+- Not configurable per environment
+- Difficult to deploy to different environments
+
+**Current Code:**
+```php
+public const METADATA_URL = 'http://localhost:8081/realms/local-dev/protocol/saml/descriptor';
+```
+
+**Recommendation:**
+1. Move all URLs to environment variables
+2. Use Symfony's parameter system
+3. Create environment-specific configs
+
+**Priority:** **MEDIUM**
+
+---
+
+### 7. Missing Null Safety Checks
+
+**Location:** `src/Service/TokenService.php` (lines 28-31)
+
+**Issue:**
+- `getRefreshToken()` can return null
+- `getExpires()` may not exist on AccessToken
+- No validation before setting values
+
+**Current Code:**
+```php
+$token->setIdpAccessToken($accessToken->getToken());
+$token->setIdpRefreshToken($accessToken->getRefreshToken()); // Can be null!
+$token->setIdpAccessTokenExpiresAt((new \DateTimeImmutable())->setTimestamp($accessToken->getExpires()));
+```
+
+**Recommendation:**
+- Add null checks
+- Handle optional refresh tokens gracefully
+- Validate token structure before processing
+
+**Priority:** **MEDIUM**
+
+---
+
+### 8. Inefficient Database Query
+
+**Location:** `src/Service/TokenService.php` (lines 70-71)
+
+**Issue:**
+- Unnecessary database query after save
+- Should return the entity directly
+
+**Current Code:**
+```php
+$this->tokenRepository->save($token);
+return $this->findByLocalRefreshToken($token->getLocalRefreshToken());
+```
+
+**Recommendation:**
+- Return `$token` directly after save
+- Remove unnecessary query
+
+**Priority:** **LOW**
+
+---
+
+### 9. Missing Input Validation
+
+**Location:** `src/Mapper/ResourceOwnerMapper.php` (lines 19-23)
+
+**Issue:**
+- Only validates `sub` claim exists
+- No email format validation
+- No tokenSub length validation
+- No validation of access levels structure
+
+**Current Code:**
+```php
+if (!isset($data['sub'])) {
+    throw new \RuntimeException(
+        sprintf('OIDC provider "%s" did not return a "sub" claim', $provider->value)
+    );
+}
+```
+
+**Recommendation:**
+- Add comprehensive validation
+- Use Symfony Validator component
+- Validate email format, string lengths, array structures
+
+**Priority:** **MEDIUM**
+
+---
+
+## Design Concerns 🟡
+
+### 10. Service Responsibility Violations
+
+**Location:** `src/Service/UserService.php`
+
+**Issue:**
+- `UserService` mixes multiple concerns:
+  - User lookup
+  - User creation
+  - Role synchronization
+  - Access level mapping
+
+**Recommendation:**
+- Split into focused services:
+  - `UserRepository` for queries
+  - `UserFactory` for creation
+  - `UserSynchronizer` for updates
+  - Keep `UserService` as facade/orchestrator
+
+**Priority:** **LOW** (refactoring)
+
+---
+
+### 11. Token Service Design Issue
+
+**Location:** `src/Service/TokenService.php` (lines 59-71)
+
+**Issue:**
+- `issueTokens()` mutates existing token entity
+- Method name suggests creation, not mutation
+- Unnecessary database query at end
+
+**Current Code:**
+```php
+public function issueTokens(Token $token, User $user): Token
+{
+    // Mutates $token...
+    $token->setLocalAccessToken($this->generateToken());
+    // ...
+    return $this->findByLocalRefreshToken($token->getLocalRefreshToken());
+}
+```
+
+**Recommendation:**
+- Rename to `issueTokensForToken()` or refactor to create new token
+- Return entity directly without query
+
+**Priority:** **LOW**
+
+---
+
+### 12. Missing Abstraction for Provider-Specific Logic
+
+**Location:** `src/Service/TokenParamsService.php` (lines 17-21)
+
+**Issue:**
+- Hardcoded provider check
+- Not extensible for new providers
+- Violates Open/Closed Principle
+
+**Current Code:**
+```php
+public function parse(ResourceOwnerInterface $resourceOwner, ProviderEnum $provider): ?AccessRolesDto
+{
+    if ($provider !== ProviderEnum::KEYCLOAK_TESCO) {
+        return null;
+    }
+    // ...
+}
+```
+
+**Recommendation:**
+- Use Strategy pattern
+- Create provider-specific parsers
+- Register parsers via service configuration
+
+**Priority:** **LOW** (but good for maintainability)
+
+---
+
+## Missing Features 🔵
+
+### 13. No Token Refresh Mechanism
+
+**Location:** `src/Service/TokenService.php`
+
+**Issue:**
+- Refresh tokens are stored but never used
+- No endpoint to refresh expired access tokens
+- No automatic token refresh logic
+
+**Impact:** Users must re-authenticate when access token expires
+
+**Recommendation:**
+1. Create `/oidc/refresh` endpoint
+2. Implement refresh token validation
+3. Issue new access/refresh token pair
+4. Consider automatic refresh in middleware
+
+**Priority:** **HIGH** (for production)
+
+---
+
+### 14. Incomplete Logout Implementation
+
+**Location:** `src/Controller/OidcController.php` (lines 48-52)
+
+**Issue:**
+- Stub implementation only
+- No token revocation
+- No session cleanup
+- No redirect to provider logout
+
+**Current Code:**
+```php
+#[Route('/logout/{provider}', name: 'oidc_logout')]
+public function logout(string $provider): Response
+{
+    return new Response('logout.');
+}
+```
+
+**Recommendation:**
+1. Revoke tokens in database
+2. Clear cookies
+3. Optionally redirect to provider logout
+4. Clear session data
+
+**Priority:** **HIGH**
+
+---
+
+### 15. No Token Validation Middleware
+
+**Location:** Missing entirely
+
+**Issue:**
+- No middleware to validate access tokens on protected routes
+- No integration with Symfony Security
+- Dashboard and other routes unprotected
+
+**Recommendation:**
+1. Create token validation authenticator
+2. Integrate with Symfony Security
+3. Validate token expiration
+4. Check token revocation status
+
+**Priority:** **HIGH** (critical for security)
+
+---
+
+### 16. SAML Logout Not Implemented
+
+**Location:** `src/Controller/SamlController.php` (lines 62-68)
+
+**Issue:**
+- Logout method exists but doesn't handle SLO properly
+- No session cleanup
+- No redirect handling
+
+**Priority:** **MEDIUM**
+
+---
+
+## Testing Concerns 🟡
+
+### 17. Limited Test Coverage
+
+**Location:** `tests/` directory
+
+**Issue:**
+- Tests exist but coverage appears limited
+- No integration tests for authentication flows
+- No tests for error scenarios
+- No tests for security edge cases
+
+**Recommendation:**
+1. Add integration tests for SAML flow
+2. Add integration tests for OIDC flow
+3. Test error handling scenarios
+4. Test token validation and refresh
+5. Test security edge cases
+
+**Priority:** **MEDIUM**
+
+---
+
+## Recommendations Priority List
+
+### 🔴 High Priority (Must Fix Before Production)
+
+1. **Implement Symfony Security Integration**
+   - Create custom authenticator
+   - Configure firewall with authentication
+   - Add access control rules
+   - Integrate token validation
+
+2. **Fix Error Handling**
+   - Add comprehensive error logging
+   - Create user-friendly error pages
+   - Hide sensitive error details from users
+   - Use Symfony's error handling system
+
+3. **Implement Token Validation Middleware**
+   - Create token authenticator
+   - Validate token expiration
+   - Check token revocation
+   - Protect routes
+
+4. **Complete Logout Implementation**
+   - Revoke tokens
+   - Clear cookies and sessions
+   - Handle provider logout redirects
+
+5. **Move Hardcoded URLs to Environment Variables**
+   - Use Symfony parameters
+   - Environment-specific configs
+
+### 🟡 Medium Priority (Should Fix Soon)
+
+6. **Implement Token Refresh Endpoint**
+   - Create refresh endpoint
+   - Validate refresh tokens
+   - Issue new token pairs
+
+7. **Add Input Validation**
+   - Validate email formats
+   - Validate token structures
+   - Validate claim formats
+   - Use Symfony Validator
+
+8. **Improve Error Handling Consistency**
+   - Standardize error handling
+   - Use custom exception types
+   - Better error context
+
+9. **Add Integration Tests**
+   - Test authentication flows
+   - Test error scenarios
+   - Test security edge cases
+
+10. **Refactor Provider-Specific Logic**
+    - Use Strategy pattern for parsers
+    - Make extensible for new providers
+
+### 🔵 Low Priority (Nice to Have)
+
+11. **Consider JWT for Internal Tokens**
+    - Add signing/encryption
+    - Better token security
+
+12. **Refactor Service Responsibilities**
+    - Split UserService
+    - Better separation of concerns
+
+13. **Add More Comprehensive Unit Tests**
+    - Increase coverage
+    - Test edge cases
+
+---
+
+## Code Examples for Fixes
+
+### Example 1: Proper Error Handling
+
+```php
+// In OidcController::callback()
+try {
+    $accessToken = $client->getAccessToken();
+    $remoteUser = $client->fetchUserFromToken($accessToken);
+} catch (IdentityProviderException $e) {
+    $this->logger->error('OIDC callback error', [
+        'provider' => $provider->value,
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ]);
+    
+    $this->addFlash('error', 'Authentication failed. Please try again.');
+    return $this->redirectToRoute('app_login');
+}
+```
+
+### Example 2: Token Validation Authenticator
+
+```php
+// src/Security/TokenAuthenticator.php
+class TokenAuthenticator extends AbstractAuthenticator
+{
+    public function supports(Request $request): ?bool
+    {
+        return $request->cookies->has(CookieService::ACCESS_COOKIE_NAME);
+    }
+
+    public function authenticate(Request $request): Passport
+    {
+        $token = $request->cookies->get(CookieService::ACCESS_COOKIE_NAME);
+        
+        $tokenEntity = $this->tokenRepository->findByLocalAccessToken($token);
+        
+        if (!$tokenEntity || $tokenEntity->isRevoked()) {
+            throw new AuthenticationException('Invalid token');
+        }
+        
+        if ($tokenEntity->getLocalAccessTokenExpiresAt() < new \DateTimeImmutable()) {
+            throw new AuthenticationException('Token expired');
+        }
+        
+        return new SelfValidatingPassport(
+            new UserBadge($tokenEntity->getUser()->getUserIdentifier())
+        );
+    }
+}
+```
+
+### Example 3: Environment-Based Configuration
+
+```php
+// config/services.yaml
+parameters:
+    saml.metadata_url: '%env(SAML_METADATA_URL)%'
+    saml.idp.entity_id: '%env(SAML_IDP_ENTITY_ID)%'
+    saml.sp.entity_id: '%env(SAML_SP_ENTITY_ID)%'
+```
+
+---
+
+## Security Checklist
+
+Before deploying to production, ensure:
+
+- [ ] Symfony Security firewall configured with authentication
+- [ ] Access control rules defined for all protected routes
+- [ ] Error handling doesn't expose sensitive information
+- [ ] All errors are logged with context
+- [ ] Token validation middleware implemented
+- [ ] Token refresh endpoint implemented
+- [ ] Logout properly revokes tokens and clears sessions
+- [ ] All hardcoded URLs moved to environment variables
+- [ ] Input validation added for all user inputs
+- [ ] Integration tests cover authentication flows
+- [ ] Security edge cases tested
+- [ ] Error scenarios tested
+- [ ] Token expiration and revocation tested
+
+---
+
+## Additional Notes
+
+### Positive Highlights
+
+- Excellent use of DTOs and value objects
+- Proper use of readonly classes where appropriate
+- Clean separation between SAML and OIDC flows
+- Good database design with proper relationships
+- Modern PHP practices throughout
+
+### Architecture Suggestions
+
+Consider implementing:
+- Event-driven architecture for authentication events
+- Command/Query separation for complex operations
+- API versioning if exposing endpoints
+- Rate limiting for authentication endpoints
+- Audit logging for security events
+
+---
+
+## Conclusion
+
+The codebase shows good architectural decisions and modern PHP practices. The main concerns are around **security integration** and **error handling**, which are critical for production deployment. Once these are addressed, the application will be well-positioned for production use.
+
+**Estimated Effort:** 
+- High priority items: 2-3 weeks
+- Medium priority items: 1-2 weeks
+- Low priority items: 1 week
+
+**Total:** ~4-6 weeks for complete hardening
+
+---
+
+**Document Version:** 1.0
+

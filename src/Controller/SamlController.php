@@ -31,23 +31,6 @@ class SamlController extends AbstractController
     /**
      * @throws Error
      */
-    private function getAuth(): Auth
-    {
-        try {
-            $settings = require $this->getParameter('kernel.project_dir') . '/config/saml/settings.php';
-            $metaData = $this->metadataService->getMetadata();
-            if(isset($settings[MetadataService::SETTINGS_KEY_IDP])) {
-                $settings[MetadataService::SETTINGS_KEY_IDP][MetadataService::SETTINGS_KEY_CERT] = $metaData->getCertificate();
-            }
-            return new Auth($settings);
-        } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
-            throw new Error('Unable to create OneLogin_Saml2_Auth instance: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * @throws Error
-     */
     #[Route('/login', name: 'saml_login')]
     public function login(): Response
     {
@@ -111,5 +94,22 @@ class SamlController extends AbstractController
         }
 
         return new Response($metadata, Response::HTTP_OK, ['Content-Type' => 'application/xml']);
+    }
+
+    /**
+     * @throws Error
+     */
+    private function getAuth(): Auth
+    {
+        try {
+            $settings = require $this->getParameter('kernel.project_dir') . '/config/saml/settings.php';
+            $metaData = $this->metadataService->getMetadata();
+            if(isset($settings[MetadataService::SETTINGS_KEY_IDP])) {
+                $settings[MetadataService::SETTINGS_KEY_IDP][MetadataService::SETTINGS_KEY_CERT] = $metaData->getCertificate();
+            }
+            return new Auth($settings);
+        } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
+            throw new Error('Unable to create OneLogin_Saml2_Auth instance: ' . $e->getMessage());
+        }
     }
 }
