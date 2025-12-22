@@ -1,5 +1,8 @@
 # Next Steps
 
-I want to include a full test suite.
+update to SAML to findCreate User
+update to SAML to create the cookies + issue tokens
 
-Once the test suite is finished I need to move onto looking at a custom grant flow.
+I want to return Oauth Exception instead of responses.
+
+Create username and password form and flow. this will have to findCreate user generate tokens and then redirect the user.
