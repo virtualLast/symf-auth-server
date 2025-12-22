@@ -141,8 +141,33 @@ class SamlController extends AbstractController
                 $settings[MetadataService::SETTINGS_KEY_IDP][MetadataService::SETTINGS_KEY_CERT] = $metaData->getCertificate();
             }
             return new Auth($settings);
-        } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
-            $this->logger->error($e->getMessage());
+        } catch (Error $e) {
+            // SAML-specific errors
+            $this->logger->error('SAML error', [
+                'error' => $e->getMessage(),
+                'type' => 'saml_config',
+            ]);
+            throw new OauthException('SAML configuration error', Response::HTTP_INTERNAL_SERVER_ERROR, $e);
+        } catch (ClientExceptionInterface|ServerExceptionInterface|TransportExceptionInterface|RedirectionExceptionInterface $e) {
+            // HTTP/network errors
+            $this->logger->error('SAML metadata fetch error', [
+                'error' => $e->getMessage(),
+                'type' => 'metadata_fetch',
+            ]);
+            throw new OauthException('SAML metadata unavailable', Response::HTTP_SERVICE_UNAVAILABLE, $e);
+        } catch (InvalidArgumentException $e) {
+            $this->logger->error('Invalid Argument SAML error', [
+                'error' => $e->getMessage(),
+                'type' => 'invalid_argument',
+            ]);
+            throw new OauthException('SAML invalid argument', Response::HTTP_SERVICE_UNAVAILABLE, $e);
+        } catch (\Exception $e) {
+            // Everything else
+            $this->logger->error('Unexpected SAML error', [
+                'error' => $e->getMessage(),
+                'type' => 'unexpected',
+                'class' => get_class($e),
+            ]);
             throw new OauthException('Unable to create SAML Auth instance', Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
     }
