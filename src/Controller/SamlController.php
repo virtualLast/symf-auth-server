@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Mapper\ResourceOwnerMapper;
+use App\Model\Dto\SamlBasicUserDto;
+use App\Model\Enum\ProviderEnum;
+use App\Service\CookieService;
 use App\Service\MetadataService;
+use App\Service\ScopeService;
+use App\Service\TokenParamsService;
+use App\Service\TokenService;
+use App\Service\UserService;
+use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Error;
 use OneLogin\Saml2\ValidationError;
@@ -23,7 +32,11 @@ class SamlController extends AbstractController
 {
 
     public function __construct(
-        private readonly MetadataService $metadataService
+        private readonly MetadataService $metadataService,
+        private readonly CookieService $cookieService,
+        private readonly UserService $userService,
+        private readonly TokenService $tokenService,
+        private readonly ResourceOwnerMapper $resourceOwnerMapper,
     )
     {
     }
@@ -65,15 +78,31 @@ class SamlController extends AbstractController
             throw new Error('Saml2 Error: ' . implode(', ', $errors));
         }
 
-        $attributes = $auth->getAttributes();
         $nameId = $auth->getNameId();
 
-        $request->getSession()->set('saml_user', [
-            'attributes' => $attributes,
-            'nameId' => $nameId,
-        ]);
+        $remoteUser = new SamlBasicUserDto();
+        $remoteUser->setId($nameId);
 
-        return $this->redirectToRoute('app_dashboard_index');
+        try {
+            $dto = $this->resourceOwnerMapper->map($remoteUser, ProviderEnum::KEYCLOAK_SAML);
+            $localUser = $this->userService->findOrCreate($dto);
+
+            $internalTokenData = $this->tokenService->createSamlToken();
+            $tokenData = $this->tokenService->issueTokens($internalTokenData, $localUser);
+
+            $cookieAccess = $this->cookieService->createAccess($tokenData->getLocalAccessToken(), $tokenData->getLocalAccessTokenExpiresAt());
+            $cookieRefresh = $this->cookieService->createRefresh($tokenData->getLocalRefreshToken(), $tokenData->getLocalRefreshTokenExpiresAt());
+
+            $response = $this->redirectToRoute('app_dashboard_index');
+            $response->headers->setCookie($cookieAccess);
+            $response->headers->setCookie($cookieRefresh);
+
+            return $response;
+
+        } catch (\Throwable $e) {
+            return new Response(sprintf('Callback error: %s', $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     /**

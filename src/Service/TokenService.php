@@ -35,6 +35,11 @@ readonly class TokenService
         return $token;
     }
 
+    public function createSamlToken(): Token
+    {
+        return new Token();
+    }
+
     public function revokeToken(AccessToken $accessToken): bool
     {
         $token = $this->findByLocalRefreshToken($accessToken->getRefreshToken());
