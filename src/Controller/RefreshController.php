@@ -27,6 +27,7 @@ class RefreshController
     }
 
     /**
+     * todo look to implement expiration
      * @throws \Exception
      */
     #[Route('/', name: 'app_refresh')]

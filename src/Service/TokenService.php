@@ -13,11 +13,12 @@ readonly class TokenService
 
     private const TOKEN_EXPIRY_1_DAY = 86400;
     private const TOKEN_EXPIRY_1_MONTH = 2592000;
-    private const REFRESH_TOKEN_HASH = 'xbh0ckwgythkp1XND7jea';
+    private const REFRESH_TOKEN_HASH = '';
     private const REFRESH_TOKEN_HASH_ALGO = 'sha512';
 
     public function __construct(
-        private TokenRepository $tokenRepository
+        private TokenRepository $tokenRepository,
+        private string $refreshTokenSalt
     ) {
     }
 
@@ -98,7 +99,7 @@ readonly class TokenService
 
     private function hashRefreshToken(string $refreshToken): string
     {
-        return hash(self::REFRESH_TOKEN_HASH_ALGO, self::REFRESH_TOKEN_HASH.$refreshToken);
+        return hash(self::REFRESH_TOKEN_HASH_ALGO, $this->refreshTokenSalt.$refreshToken);
     }
 
     /**
