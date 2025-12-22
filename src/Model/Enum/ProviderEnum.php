@@ -9,4 +9,5 @@ enum ProviderEnum: string
     case KEYCLOAK_SAML = 'keycloak_saml';
     case AUTH0    = 'auth0';
     case OKTA     = 'okta';
+    case LIGHTFOOT = 'lightfoot';
 }
