@@ -34,6 +34,8 @@ class Token
     #[ORM\Column(type: Types::STRING, length: 255, unique: true)]
     private string $localRefreshToken;
 
+    private ?string $rawLocalRefreshToken = null;
+
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $localAccessTokenExpiresAt = null;
 
@@ -97,6 +99,17 @@ class Token
     }
 
     public function setLocalRefreshToken(string $token): static
+    {
+        $this->localRefreshToken = $token;
+        return $this;
+    }
+
+    public function getRawLocalRefreshToken(): ?string
+    {
+        return $this->localRefreshToken;
+    }
+
+    public function setRawLocalRefreshToken(string $token): static
     {
         $this->localRefreshToken = $token;
         return $this;
