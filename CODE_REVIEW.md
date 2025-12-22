@@ -37,33 +37,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Critical Issues 🔴
 
-### 4. Token Storage Security Concerns
-
-**Location:** `src/Service/TokenService.php`, `src/Service/CookieService.php`
-
-**Issue:**
-- Internal tokens stored as plain ULIDs (no signature/encryption)
-- Tokens stored in database as plain strings
-- No token validation mechanism
-- No token revocation endpoint (except stub)
-
-**Current Implementation:**
-- Tokens are ULIDs: `new Ulid()`
-- Stored in cookies (secure, but tokens themselves aren't signed)
-- No JWT or signed token format
-
-**Impact:** 🟡 **MEDIUM** - Tokens could be forged if database is compromised
-
-**Recommendation:**
-1. Consider JWT with signing for internal tokens
-2. Implement token validation middleware
-3. Add token signature/encryption
-4. Implement proper token refresh flow
-
-**Priority:** **MEDIUM** (depends on threat model)
-
----
-
 ## Code Quality Issues 🟡
 
 ### 5. Inconsistent Error Handling
