@@ -51,7 +51,7 @@ class RefreshController
             throw new OauthException('User not found', Response::HTTP_BAD_REQUEST);
         }
         // revoke existing refresh and access token
-        $this->tokenService->revokeToken($tokenData->getLocalRefreshToken());
+        $this->tokenService->revokeToken($refreshToken);
         // create new refresh and access token
         $token = $this->tokenService->createSimpleToken();
         // issue tokens to user
