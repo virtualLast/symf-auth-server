@@ -27,7 +27,6 @@ class RefreshController
     }
 
     /**
-     * todo look to implement expiration
      * @throws \Exception
      */
     #[Route('/', name: 'app_refresh')]
@@ -45,11 +44,9 @@ class RefreshController
             $this->logger->error(sprintf('Refresh token (%s) not found', $refreshToken));
             throw new OauthException('Refresh token not found', Response::HTTP_BAD_REQUEST);
         }
-        if ($tokenData->isRevoked()) {
-            throw new OauthException('Refresh token revoked', Response::HTTP_BAD_REQUEST);
-        }
+
         if ($tokenData->getLocalRefreshTokenExpiresAt() < new \DateTimeImmutable()) {
-            throw new OauthException('Refresh token expired', Response::HTTP_BAD_REQUEST);
+            throw new OauthException('Refresh token expired', Response::HTTP_UNAUTHORIZED);
         }
         // call to user service to find user, use the user we get from the token
         $user = $tokenData->getUser();
