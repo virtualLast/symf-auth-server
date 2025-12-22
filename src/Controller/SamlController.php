@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Mapper\ResourceOwnerMapper;
 use App\Model\Dto\SamlBasicUserDto;
 use App\Model\Enum\ProviderEnum;
+use App\OAuth\Exception\OauthException;
 use App\Service\CookieService;
 use App\Service\MetadataService;
 use App\Service\ScopeService;
@@ -18,6 +19,7 @@ use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Error;
 use OneLogin\Saml2\ValidationError;
 use Psr\Cache\InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,12 +39,13 @@ class SamlController extends AbstractController
         private readonly UserService $userService,
         private readonly TokenService $tokenService,
         private readonly ResourceOwnerMapper $resourceOwnerMapper,
+        private readonly LoggerInterface $logger
     )
     {
     }
 
     /**
-     * @throws Error
+     * @throws Error|OauthException
      */
     #[Route('/login', name: 'saml_login')]
     public function login(): Response
@@ -53,7 +56,7 @@ class SamlController extends AbstractController
     }
 
     /**
-     * @throws Error
+     * @throws Error|OauthException
      */
     #[Route('/logout', name: 'saml_logout')]
     public function logout(): Response
@@ -66,6 +69,7 @@ class SamlController extends AbstractController
     /**
      * @throws Error
      * @throws ValidationError
+     * @throws OAuthException
      */
     #[Route('/acs', name: 'saml_acs')]
     public function acs(Request $request): Response
@@ -75,7 +79,8 @@ class SamlController extends AbstractController
 
         $errors = $auth->getErrors();
         if(count($errors) > 0) {
-            throw new Error('Saml2 Error: ' . implode(', ', $errors));
+            $this->logger->error('Saml2 Error: ' . implode(', ', $errors));
+            throw new OAuthException('Acs SAML error', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $nameId = $auth->getNameId();
@@ -100,7 +105,8 @@ class SamlController extends AbstractController
             return $response;
 
         } catch (\Throwable $e) {
-            return new Response(sprintf('Callback error: %s', $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            $this->logger->error($e->getMessage());
+            throw new OAuthException('Token Issuance SAML error', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -119,14 +125,15 @@ class SamlController extends AbstractController
         $errors = $settings->validateMetadata($metadata);
 
         if (count($errors) > 0) {
-            throw new Error('Invalid SP metadata: ' . implode(', ', $errors));
+            $this->logger->error('Invalid SP metadata: ' . implode(', ', $errors));
+            throw new OAuthException('Invalid SAML Provider metadata');
         }
 
         return new Response($metadata, Response::HTTP_OK, ['Content-Type' => 'application/xml']);
     }
 
     /**
-     * @throws Error
+     * @throws OauthException
      */
     private function getAuth(): Auth
     {
@@ -138,7 +145,8 @@ class SamlController extends AbstractController
             }
             return new Auth($settings);
         } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
-            throw new Error('Unable to create OneLogin_Saml2_Auth instance: ' . $e->getMessage());
+            $this->logger->error($e->getMessage());
+            throw new OAuthException('Unable to create SAML Auth instance', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
