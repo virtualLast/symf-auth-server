@@ -87,7 +87,7 @@ class OidcController extends AbstractController
             $tokenData = $this->tokenService->issueTokens($internalTokenData, $localUser);
 
             $cookieAccess = $this->cookieService->createAccess($tokenData->getLocalAccessToken(), $tokenData->getLocalAccessTokenExpiresAt());
-            $cookieRefresh = $this->cookieService->createRefresh($tokenData->getLocalRefreshToken(), $tokenData->getLocalRefreshTokenExpiresAt());
+            $cookieRefresh = $this->cookieService->createRefresh($tokenData->getRawLocalRefreshToken(), $tokenData->getLocalRefreshTokenExpiresAt());
 
             $response = $this->redirectToRoute('app_dashboard_index');
             $response->headers->setCookie($cookieAccess);
