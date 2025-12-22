@@ -143,7 +143,7 @@ class SamlController extends AbstractController
             return new Auth($settings);
         } catch (Error|\Exception|InvalidArgumentException|ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
             $this->logger->error($e->getMessage());
-            throw new OauthException('Unable to create SAML Auth instance', Response::HTTP_INTERNAL_SERVER_ERROR);
+            throw new OauthException('Unable to create SAML Auth instance', Response::HTTP_INTERNAL_SERVER_ERROR, $e);
         }
     }
 }
