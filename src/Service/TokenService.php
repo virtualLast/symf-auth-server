@@ -14,9 +14,11 @@ readonly class TokenService
     private const TOKEN_EXPIRY_1_DAY = 86400;
     private const TOKEN_EXPIRY_1_MONTH = 2592000;
     private const REFRESH_TOKEN_HASH = 'xbh0ckwgythkp1XND7jea';
+    private const REFRESH_TOKEN_HASH_ALGO = 'sha512';
 
-    public function __construct(private TokenRepository $tokenRepository)
-    {
+    public function __construct(
+        private TokenRepository $tokenRepository
+    ) {
     }
 
     /**
@@ -36,14 +38,14 @@ readonly class TokenService
         return $token;
     }
 
-    public function createSamlToken(): Token
+    public function createSimpleToken(): Token
     {
         return new Token();
     }
 
-    public function revokeToken(AccessToken $accessToken): bool
+    public function revokeToken(string $refreshToken): bool
     {
-        $token = $this->findByLocalRefreshToken($accessToken->getRefreshToken());
+        $token = $this->findByLocalRefreshToken($refreshToken);
 
         if ($token === null) {
             return false;
@@ -67,17 +69,22 @@ readonly class TokenService
         $token->setLocalAccessToken($this->generateToken());
         $token->setLocalAccessTokenExpiresAt($this->generateExpiry());
 
-        $token->setLocalRefreshToken($this->generateToken());
-        $token->setLocalRefreshTokenExpiresAt($this->generateExpiry(self::TOKEN_EXPIRY_1_MONTH));
+        $refreshToken = $this->generateToken();
+        $token->setRawLocalRefreshToken($refreshToken);
+        $token->setLocalRefreshToken($this->hashRefreshToken($refreshToken));
+        $token->setLocalRefreshTokenExpiresAt(
+            $this->generateExpiry(self::TOKEN_EXPIRY_1_MONTH)
+        );
 
         $token->setUser($user);
         $this->tokenRepository->save($token);
 
-        return $this->findByLocalRefreshToken($token->getLocalRefreshToken());
+        return $token;
     }
 
     public function findByLocalRefreshToken(string $refreshToken): ?Token
     {
+        $refreshToken = $this->hashRefreshToken($refreshToken);
         return $this->tokenRepository->findOneBy([
             'localRefreshToken' => $refreshToken,
             'revoked' => false
@@ -87,6 +94,11 @@ readonly class TokenService
     private function generateToken(): Ulid
     {
         return new Ulid();
+    }
+
+    private function hashRefreshToken(string $refreshToken): string
+    {
+        return hash(self::REFRESH_TOKEN_HASH_ALGO, self::REFRESH_TOKEN_HASH.$refreshToken);
     }
 
     /**
