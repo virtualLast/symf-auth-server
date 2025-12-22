@@ -106,12 +106,12 @@ class Token
 
     public function getRawLocalRefreshToken(): ?string
     {
-        return $this->localRefreshToken;
+        return $this->rawLocalRefreshToken;
     }
 
     public function setRawLocalRefreshToken(string $token): static
     {
-        $this->localRefreshToken = $token;
+        $this->rawLocalRefreshToken = $token;
         return $this;
     }
 
