@@ -63,34 +63,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ---
 
-### 11. Token Service Design Issue
-
-**Location:** `src/Service/TokenService.php` (lines 59-71)
-
-**Issue:**
-- `issueTokens()` mutates existing token entity
-- Method name suggests creation, not mutation
-- Unnecessary database query at end
-
-**Current Code:**
-```php
-public function issueTokens(Token $token, User $user): Token
-{
-    // Mutates $token...
-    $token->setLocalAccessToken($this->generateToken());
-    // ...
-    return $this->findByLocalRefreshToken($token->getLocalRefreshToken());
-}
-```
-
-**Recommendation:**
-- Rename to `issueTokensForToken()` or refactor to create new token
-- Return entity directly without query
-
-**Priority:** **LOW**
-
----
-
 ### 12. Missing Abstraction for Provider-Specific Logic
 
 **Location:** `src/Service/TokenParamsService.php` (lines 17-21)
