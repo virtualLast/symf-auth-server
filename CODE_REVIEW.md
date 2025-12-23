@@ -41,35 +41,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Design Concerns 🟡
 
-### 12. Missing Abstraction for Provider-Specific Logic
-
-**Location:** `src/Service/TokenParamsService.php` (lines 17-21)
-
-**Issue:**
-- Hardcoded provider check
-- Not extensible for new providers
-- Violates Open/Closed Principle
-
-**Current Code:**
-```php
-public function parse(ResourceOwnerInterface $resourceOwner, ProviderEnum $provider): ?AccessRolesDto
-{
-    if ($provider !== ProviderEnum::KEYCLOAK_TESCO) {
-        return null;
-    }
-    // ...
-}
-```
-
-**Recommendation:**
-- Use Strategy pattern
-- Create provider-specific parsers
-- Register parsers via service configuration
-
-**Priority:** **LOW** (but good for maintainability)
-
----
-
 ## Missing Features 🔵
 
 ### 13. No Token Refresh Mechanism
