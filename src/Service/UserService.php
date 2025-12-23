@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Mapper\AccessLevelRoleMapper;
 use App\Model\Dto\ResourceOwnerDto;
 use App\Model\Enum\ProviderEnum;
 use App\Repository\UserRepository;

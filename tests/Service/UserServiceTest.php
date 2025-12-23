@@ -3,10 +3,10 @@
 namespace App\Tests\Service;
 
 use App\Entity\User;
+use App\Mapper\AccessLevelRoleMapper;
 use App\Model\Dto\ResourceOwnerDto;
 use App\Model\Enum\ProviderEnum;
 use App\Repository\UserRepository;
-use App\Service\AccessLevelRoleMapper;
 use App\Service\UserService;
 use PHPUnit\Framework\TestCase;
 
@@ -386,7 +386,7 @@ class UserServiceTest extends TestCase
 
         // act - first call
         $firstResult = $this->userService->findOrCreate($resourceOwnerDto);
-        
+
         // Capture state after first call
         $firstEmail = $firstResult->getEmail();
         $firstAccessLevels = $firstResult->getAccessLevels();
