@@ -39,31 +39,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Code Quality Issues 🟡
 
-### 7. Missing Null Safety Checks
-
-**Location:** `src/Service/TokenService.php` (lines 28-31)
-
-**Issue:**
-- `getRefreshToken()` can return null
-- `getExpires()` may not exist on AccessToken
-- No validation before setting values
-
-**Current Code:**
-```php
-$token->setIdpAccessToken($accessToken->getToken());
-$token->setIdpRefreshToken($accessToken->getRefreshToken()); // Can be null!
-$token->setIdpAccessTokenExpiresAt((new \DateTimeImmutable())->setTimestamp($accessToken->getExpires()));
-```
-
-**Recommendation:**
-- Add null checks
-- Handle optional refresh tokens gracefully
-- Validate token structure before processing
-
-**Priority:** **MEDIUM**
-
----
-
 ### 8. Inefficient Database Query
 
 **Location:** `src/Service/TokenService.php` (lines 70-71)
