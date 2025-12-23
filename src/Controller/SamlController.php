@@ -53,17 +53,6 @@ class SamlController extends AbstractController
     }
 
     /**
-     * @throws Error|OauthException
-     */
-    #[Route('/logout', name: 'saml_logout')]
-    public function logout(): Response
-    {
-        $auth = $this->getAuth();
-        $auth->logout();
-        return new Response('logout.');
-    }
-
-    /**
      * @throws Error
      * @throws ValidationError
      * @throws OAuthException

@@ -14,11 +14,13 @@ use App\Service\TokenService;
 use App\Service\UserService;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Client\OAuth2ClientInterface;
+use KnpU\OAuth2ClientBundle\Client\Provider\KeycloakClient;
 use KnpU\OAuth2ClientBundle\DependencyInjection\InvalidOAuth2ClientException;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -46,12 +48,6 @@ class OidcController extends AbstractController
         $scopes = $this->scopeService->getScopesForProvider($providerEnum);
 
         return $client->redirect($scopes);
-    }
-
-    #[Route('/logout/{provider}', name: 'oidc_logout')]
-    public function logout(string $provider): Response
-    {
-        return new Response('logout.');
     }
 
     /**
