@@ -41,28 +41,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Design Concerns 🟡
 
-### 10. Service Responsibility Violations
-
-**Location:** `src/Service/UserService.php`
-
-**Issue:**
-- `UserService` mixes multiple concerns:
-  - User lookup
-  - User creation
-  - Role synchronization
-  - Access level mapping
-
-**Recommendation:**
-- Split into focused services:
-  - `UserRepository` for queries
-  - `UserFactory` for creation
-  - `UserSynchronizer` for updates
-  - Keep `UserService` as facade/orchestrator
-
-**Priority:** **LOW** (refactoring)
-
----
-
 ### 12. Missing Abstraction for Provider-Specific Logic
 
 **Location:** `src/Service/TokenParamsService.php` (lines 17-21)
