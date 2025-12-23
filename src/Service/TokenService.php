@@ -92,6 +92,11 @@ readonly class TokenService
         ]);
     }
 
+    public function getHashAlgo(): string
+    {
+        return self::REFRESH_TOKEN_HASH_ALGO;
+    }
+
     private function generateToken(): Ulid
     {
         return new Ulid();

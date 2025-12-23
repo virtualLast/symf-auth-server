@@ -16,10 +16,12 @@ final class TokenServiceTest extends TestCase
     private TokenRepository $tokenRepository;
     private TokenService $tokenService;
 
+    private const REFRESH_TOKEN_SALT = 'this_is_the_refresh_token_salt';
+
     protected function setUp(): void
     {
         $this->tokenRepository = $this->createMock(TokenRepository::class);
-        $this->tokenService = new TokenService($this->tokenRepository);
+        $this->tokenService = new TokenService($this->tokenRepository, self::REFRESH_TOKEN_SALT);
     }
 
     /**
@@ -76,10 +78,10 @@ final class TokenServiceTest extends TestCase
     public function test_it_revokes_an_existing_token(): void
     {
         // arrange
-        $accessToken = $this->createAccessToken();
+        $rawToken = 'raw-refresh';
 
         $token = new Token();
-        $token->setLocalRefreshToken('local-refresh');
+        $token->setLocalRefreshToken($rawToken);
 
         $this->tokenRepository
             ->expects(self::once())
@@ -92,7 +94,7 @@ final class TokenServiceTest extends TestCase
             ->with($token);
 
         // act
-        $result = $this->tokenService->revokeToken($accessToken);
+        $result = $this->tokenService->revokeToken($rawToken);
 
         // assert
         self::assertTrue($result);
@@ -102,7 +104,7 @@ final class TokenServiceTest extends TestCase
     public function test_it_returns_false_when_revoking_a_nonexistent_token(): void
     {
         // arrange
-        $accessToken = $this->createAccessToken();
+        $rawToken = 'raw-refresh';
 
         $this->tokenRepository
             ->method('findOneBy')
@@ -110,7 +112,7 @@ final class TokenServiceTest extends TestCase
 
         // act + assert
         self::assertFalse(
-            $this->tokenService->revokeToken($accessToken)
+            $this->tokenService->revokeToken($rawToken)
         );
     }
 
@@ -174,48 +176,15 @@ final class TokenServiceTest extends TestCase
     }
 
     /**
-     * Guards against future refactors that accidentally return an unpersisted token.
-     * This is subtle but valuable in auth code.
-     * @throws \Exception
-     */
-    public function test_issue_tokens_returns_persisted_token_from_repository(): void
-    {
-        // arrange
-        $token = new Token();
-        $user = new User();
-
-        $this->tokenRepository
-            ->expects(self::once())
-            ->method('save')
-            ->with($token);
-
-        $persistedToken = new Token();
-        $persistedToken->setLocalAccessToken('persisted-access');
-        $persistedToken->setLocalRefreshToken('persisted-refresh');
-
-        $this->tokenRepository
-            ->expects(self::once())
-            ->method('findOneBy')
-            ->willReturn($persistedToken);
-
-        // act
-        $result = $this->tokenService->issueTokens($token, $user);
-
-        // assert - ensures the returned token is from the repository (persisted)
-        self::assertSame('persisted-access', $result->getLocalAccessToken());
-        self::assertSame('persisted-refresh', $result->getLocalRefreshToken());
-    }
-
-    /**
      * This locks down behaviour around double-revocation and prevents accidental re-writes later.
      */
     public function test_revoking_an_already_revoked_token_returns_true(): void
     {
         // arrange
-        $accessToken = $this->createAccessToken();
+        $rawToken = 'raw-refresh';
 
         $token = new Token();
-        $token->setLocalRefreshToken('local-refresh');
+        $token->setLocalRefreshToken($rawToken);
         $token->setRevoked(true);
 
         $this->tokenRepository
@@ -229,7 +198,7 @@ final class TokenServiceTest extends TestCase
             ->with($token);
 
         // act
-        $result = $this->tokenService->revokeToken($accessToken);
+        $result = $this->tokenService->revokeToken($rawToken);
 
         // assert
         self::assertTrue($result);
@@ -243,10 +212,10 @@ final class TokenServiceTest extends TestCase
     public function test_revoke_token_does_not_persist_when_token_not_found(): void
     {
         // arrange
-        $accessToken = $this->createAccessToken();
+        $rawToken = 'raw-refresh';
 
         $token = new Token();
-        $token->setLocalRefreshToken('local-refresh');
+        $token->setLocalRefreshToken($rawToken);
 
         $this->tokenRepository
             ->expects(self::once())
@@ -259,7 +228,7 @@ final class TokenServiceTest extends TestCase
             ->with($token);
 
         // act
-        $result = $this->tokenService->revokeToken($accessToken);
+        $result = $this->tokenService->revokeToken($rawToken);
 
         // assert
         self::assertFalse($result);
@@ -283,6 +252,105 @@ final class TokenServiceTest extends TestCase
             $issuedToken->getLocalAccessToken(),
             $issuedToken->getLocalRefreshToken()
         );
+    }
+
+    /**
+     * When the IdP access token has no expiry,
+     * TokenService must generate a default expiry instead of failing.
+     * @return void
+     * @throws \Exception
+     */
+    public function test_it_generates_idp_access_token_expiry_when_oauth_expiry_is_missing(): void
+    {
+
+        // $expiry = $accessToken->getExpires() ?? $this->generateExpiry()->getTimestamp();
+        // arrange
+        $accessToken = new AccessToken([
+            'access_token' => 'idp-access',
+            'refresh_token' => 'idp-refresh',
+        ]);
+
+        $token = $this->tokenService->createToken($accessToken);
+
+        // act + assert
+        self::assertNotNull($token->getIdpAccessTokenExpiresAt());
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function test_issue_tokens_persists_hashed_refresh_token_only(): void
+    {
+        // arrange
+        $token = new Token();
+        $user = new User();
+
+        $this->tokenRepository
+            ->expects($this->once())
+            ->method('save')
+            ->with($token);
+
+        // act
+        $issuedToken = $this->tokenService->issueTokens($token, $user);
+
+        // assert
+        $this->assertNotNull($issuedToken->getRawLocalRefreshToken());
+        $this->assertNotNull($issuedToken->getLocalRefreshToken());
+
+        $this->assertNotSame(
+            $issuedToken->getRawLocalRefreshToken(),
+            $issuedToken->getLocalRefreshToken(),
+            'Persisted refresh token must be hashed, not raw'
+        );
+    }
+
+
+    public function test_find_by_local_refresh_token_hashes_input_before_lookup(): void
+    {
+        // arrange
+        $rawToken = 'raw-refresh';
+        $hashedToken = hash('sha512', self::REFRESH_TOKEN_SALT.$rawToken);
+
+        $this->tokenRepository
+            ->expects($this->once())
+            ->method('findOneBy')
+            ->with([
+                'localRefreshToken' => $hashedToken,
+                'revoked' => false,
+            ])
+            ->willReturn(null);
+
+        // act
+        $this->tokenService->findByLocalRefreshToken($rawToken);
+    }
+
+    /**
+     * Behaviour to test:
+     * Issuing tokens always results in exactly one persistence operation.
+     *
+     * Why this matters:
+     * Prevents accidental double-save
+     * Prevents early returns skipping persistence
+     * @throws \Exception
+     */
+    public function test_issue_tokens_persists_token_once(): void
+    {
+        // arrange, assert
+        $this->tokenRepository
+            ->expects(self::once())
+            ->method('save');
+
+        // act
+        $this->tokenService->issueTokens(new Token(), new User());
+    }
+
+    /**
+     * Why this matters
+     * Prevents accidental downgrade (e.g. sha1)
+     */
+    public function test_refresh_token_hash_algorithm_is_sha512() :void
+    {
+        self::assertSame('sha512', $this->tokenService->getHashAlgo());
     }
 
     private function createAccessToken(): AccessToken
