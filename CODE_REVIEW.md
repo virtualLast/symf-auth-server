@@ -39,34 +39,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Code Quality Issues 🟡
 
-### 9. Missing Input Validation
-
-**Location:** `src/Mapper/ResourceOwnerMapper.php` (lines 19-23)
-
-**Issue:**
-- Only validates `sub` claim exists
-- No email format validation
-- No tokenSub length validation
-- No validation of access levels structure
-
-**Current Code:**
-```php
-if (!isset($data['sub'])) {
-    throw new \RuntimeException(
-        sprintf('OIDC provider "%s" did not return a "sub" claim', $provider->value)
-    );
-}
-```
-
-**Recommendation:**
-- Add comprehensive validation
-- Use Symfony Validator component
-- Validate email format, string lengths, array structures
-
-**Priority:** **MEDIUM**
-
----
-
 ## Design Concerns 🟡
 
 ### 10. Service Responsibility Violations

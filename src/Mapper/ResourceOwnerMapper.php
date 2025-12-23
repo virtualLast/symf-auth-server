@@ -22,10 +22,15 @@ final class ResourceOwnerMapper
             );
         }
 
+        $email = null;
+        if (isset($data['email']) && filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $email = $data['email'];
+        }
+
         return new ResourceOwnerDto(
             provider: $provider,
             tokenSub: $data['sub'],
-            email: $data['email'] ?? null,
+            email: $email,
             accessLevels: $accessRoles?->accessLevels ?? [],
             userRoles: $accessRoles?->hierCodes ?? []
         );
