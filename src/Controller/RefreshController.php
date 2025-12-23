@@ -60,9 +60,11 @@ class RefreshController
         // issue tokens to user
         $newTokenData = $this->tokenService->issueTokens($token, $user);
         // create a json response for the access token and set a new cookie for the refresh token
-        $response = new JsonResponse(['access_token' => $newTokenData->getLocalAccessToken()]);
+        $response = new JsonResponse([
+            'access_token' => $newTokenData->getLocalAccessToken(),
+            'expires_in' => $newTokenData->getLocalAccessTokenExpiresAt()->getTimestamp()
+        ]);
         $response->headers->setCookie($this->cookieService->createRefresh($newTokenData->getRawLocalRefreshToken(), $newTokenData->getLocalRefreshTokenExpiresAt()));
-        $response->headers->setCookie($this->cookieService->createAccess($newTokenData->getLocalAccessToken(), $newTokenData->getLocalAccessTokenExpiresAt()));
 
         return $response;
 
