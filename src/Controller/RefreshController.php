@@ -32,8 +32,7 @@ class RefreshController
     #[Route('/', name: 'app_refresh')]
     public function refresh(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true);
-        $refreshToken = $data[self::REFRESH_TOKEN_REQUEST_ATTRIBUTE] ?? null;
+        $refreshToken = $request->cookies->get(CookieService::REFRESH_COOKIE_NAME);
         if($refreshToken === null) {
             throw new OauthException('Refresh token not found', Response::HTTP_BAD_REQUEST);
         }
