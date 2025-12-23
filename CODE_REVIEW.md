@@ -39,31 +39,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Code Quality Issues 🟡
 
-### 6. Hardcoded Configuration Values
-
-**Location:** 
-- `src/Service/MetadataService.php` (line 19)
-- `config/saml/settings.php` (multiple hardcoded URLs)
-
-**Issue:**
-- Hardcoded URLs should be environment variables
-- Not configurable per environment
-- Difficult to deploy to different environments
-
-**Current Code:**
-```php
-public const METADATA_URL = 'http://localhost:8081/realms/local-dev/protocol/saml/descriptor';
-```
-
-**Recommendation:**
-1. Move all URLs to environment variables
-2. Use Symfony's parameter system
-3. Create environment-specific configs
-
-**Priority:** **MEDIUM**
-
----
-
 ### 7. Missing Null Safety Checks
 
 **Location:** `src/Service/TokenService.php` (lines 28-31)

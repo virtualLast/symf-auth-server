@@ -31,7 +31,8 @@ readonly class TokenService
         $token->setIdpAccessToken($accessToken->getToken());
         $token->setIdpRefreshToken($accessToken->getRefreshToken());
 
-        $token->setIdpAccessTokenExpiresAt((new \DateTimeImmutable())->setTimestamp($accessToken->getExpires()));
+        $expiry = $accessToken->getExpires() ?? $this->generateExpiry()->getTimestamp();
+        $token->setIdpAccessTokenExpiresAt((new \DateTimeImmutable())->setTimestamp($expiry));
 
         $token->setIdpRefreshTokenExpiresAt($this->generateExpiry(self::TOKEN_EXPIRY_1_MONTH));
 
