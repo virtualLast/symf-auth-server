@@ -319,7 +319,28 @@ class UserServiceTest extends TestCase
      * accidentally instantiate a new User for an existing identity.
      */
     public function test_find_or_create_returns_same_user_instance_for_existing_user(): void
-    {}
+    {
+        // arrange
+        $existingUser = new User();
+        $existingUser->setProvider($this->createProvider());
+        $existingUser->setTokenSub('super-secret-token-sub-value');
+        $existingUser->setEmail('existing@example.com');
+
+        $this->userRepository
+            ->expects($this->once())
+            ->method('findOneBy')
+            ->willReturn($existingUser);
+
+        $this->userRepository
+            ->expects($this->once())
+            ->method('save');
+
+        // act
+        $returnedUser = $this->userService->findOrCreate($this->createResourceOwnerDto());
+
+        // assert
+        $this->assertSame($existingUser, $returnedUser, 'The same User instance should be returned, not a new one');
+    }
 
     /**
      * Ensures that calling findOrCreate multiple times with the same remote
@@ -339,7 +360,51 @@ class UserServiceTest extends TestCase
      * findOrCreate over time.
      */
     public function test_find_or_create_is_idempotent_for_same_remote_user_data(): void
-    {}
+    {
+        // arrange
+        $resourceOwnerDto = $this->createResourceOwnerDto([
+            'email' => 'test@example.com',
+            'accessLevels' => ['LEVEL_1', 'LEVEL_2'],
+            'hierCode' => []
+        ]);
+
+        $user = new User();
+        $user->setProvider($this->createProvider());
+        $user->setTokenSub('super-secret-token-sub-value');
+        $user->setEmail('test@example.com');
+
+        // Both calls should find the existing user
+        $this->userRepository
+            ->expects($this->exactly(2))
+            ->method('findOneBy')
+            ->willReturn($user);
+
+        // Both calls should trigger save (synchronization happens each time)
+        $this->userRepository
+            ->expects($this->exactly(2))
+            ->method('save');
+
+        // act - first call
+        $firstResult = $this->userService->findOrCreate($resourceOwnerDto);
+        
+        // Capture state after first call
+        $firstEmail = $firstResult->getEmail();
+        $firstAccessLevels = $firstResult->getAccessLevels();
+        $firstRoles = $firstResult->getRoles();
+
+        // act - second call with identical data
+        $secondResult = $this->userService->findOrCreate($resourceOwnerDto);
+
+        // assert - same instance returned
+        $this->assertSame($user, $firstResult);
+        $this->assertSame($user, $secondResult);
+
+        // assert - state remains consistent (idempotent)
+        $this->assertSame($firstEmail, $secondResult->getEmail(), 'Email should remain unchanged');
+        $this->assertSame($firstAccessLevels, $secondResult->getAccessLevels(), 'Access levels should remain unchanged');
+        $this->assertSame($firstRoles, $secondResult->getRoles(), 'Roles should remain unchanged and not duplicated');
+        $this->assertSame(['ROLE_USER'], $secondResult->getRoles(), 'Default role should be assigned when no hier codes provided');
+    }
 
 
     private function createResourceOwnerDto(array $extraData = []): ResourceOwnerDto
