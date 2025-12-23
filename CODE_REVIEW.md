@@ -39,28 +39,6 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ## Code Quality Issues 🟡
 
-### 8. Inefficient Database Query
-
-**Location:** `src/Service/TokenService.php` (lines 70-71)
-
-**Issue:**
-- Unnecessary database query after save
-- Should return the entity directly
-
-**Current Code:**
-```php
-$this->tokenRepository->save($token);
-return $this->findByLocalRefreshToken($token->getLocalRefreshToken());
-```
-
-**Recommendation:**
-- Return `$token` directly after save
-- Remove unnecessary query
-
-**Priority:** **LOW**
-
----
-
 ### 9. Missing Input Validation
 
 **Location:** `src/Mapper/ResourceOwnerMapper.php` (lines 19-23)
