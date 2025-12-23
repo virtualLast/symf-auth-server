@@ -45,12 +45,12 @@ final class MetadataServiceTest extends TestCase
         $response = $this->createResponseWithContent($this->buildValidMetadataXml($expectedCert));
 
         $this->client
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('request')
             ->with(
                 'GET',
                 MetadataService::METADATA_URL,
-                self::callback(function ($opts) {
+                $this->callback(function ($opts) {
                     return isset($opts['headers']['Accept']) && $opts['headers']['Accept'] === 'application/xml';
                 })
             )
@@ -58,18 +58,18 @@ final class MetadataServiceTest extends TestCase
 
         // Cache mock: assert key and TTL via ItemInterface::expiresAfter
         $this->cacheItem
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('expiresAfter')
-            ->with(self::equalTo(86400));
+            ->with($this->equalTo(86400));
 
         $capturedKey = null;
         $this->cache
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('get')
-            ->with(self::callback(function ($key) use (&$capturedKey) {
+            ->with($this->callback(function ($key) use (&$capturedKey) {
                 $capturedKey = $key;
                 return true;
-            }), self::isCallable())
+            }), $this->isCallable())
             ->willReturnCallback(function ($key, $callback) {
                 return $callback($this->cacheItem);
             });
@@ -78,8 +78,8 @@ final class MetadataServiceTest extends TestCase
         $dto = $this->service->getMetadata();
 
         // assert
-        self::assertSame($expectedCert, $dto->getCertificate());
-        self::assertSame(urlencode(MetadataService::class . 'metadata'), $capturedKey);
+        $this->assertSame($expectedCert, $dto->getCertificate());
+        $this->assertSame(urlencode(MetadataService::class . 'metadata'), $capturedKey);
     }
 
     /**
@@ -161,12 +161,12 @@ XML;
     {
         // arrange
         $this->client
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('request');
 
         $cached = (new MetadataDto())->setCertificate('CACHEDCERT');
         $this->cache
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('get')
             ->willReturn($cached);
 
@@ -174,7 +174,7 @@ XML;
         $dto = $this->service->getMetadata();
 
         // assert
-        self::assertSame('CACHEDCERT', $dto->getCertificate());
+        $this->assertSame('CACHEDCERT', $dto->getCertificate());
     }
 
     /**
@@ -189,12 +189,12 @@ XML;
         $response = $this->createResponseWithContent($this->buildValidMetadataXml('CERT'));
 
         $this->client
-            ->expects(self::once())
+            ->expects($this->once())
             ->method('request')
             ->with(
                 'GET',
-                self::equalTo(MetadataService::METADATA_URL),
-                self::callback(function ($opts) {
+                $this->equalTo(MetadataService::METADATA_URL),
+                $this->callback(function ($opts) {
                     return isset($opts['headers']) && ($opts['headers']['Accept'] ?? null) === 'application/xml';
                 })
             )
@@ -211,7 +211,7 @@ XML;
         $dto = $this->service->getMetadata();
 
         // assert
-        self::assertSame('CERT', $dto->getCertificate());
+        $this->assertSame('CERT', $dto->getCertificate());
     }
 
     private function buildValidMetadataXml(string $certificate): string
