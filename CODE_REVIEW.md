@@ -35,34 +35,7 @@ The codebase demonstrates a solid foundation with clean architecture, modern PHP
 
 ---
 
-## Critical Issues 🔴
-
-## Code Quality Issues 🟡
-
-## Design Concerns 🟡
-
 ## Missing Features 🔵
-
-### 13. No Token Refresh Mechanism
-
-**Location:** `src/Service/TokenService.php`
-
-**Issue:**
-- Refresh tokens are stored but never used
-- No endpoint to refresh expired access tokens
-- No automatic token refresh logic
-
-**Impact:** Users must re-authenticate when access token expires
-
-**Recommendation:**
-1. Create `/oidc/refresh` endpoint
-2. Implement refresh token validation
-3. Issue new access/refresh token pair
-4. Consider automatic refresh in middleware
-
-**Priority:** **HIGH** (for production)
-
----
 
 ### 14. Incomplete Logout Implementation
 
