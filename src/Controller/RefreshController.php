@@ -65,6 +65,7 @@ class RefreshController
             'expires_in' => $newTokenData->getLocalAccessTokenExpiresAt()->getTimestamp()
         ]);
         $response->headers->setCookie($this->cookieService->createRefresh($newTokenData->getRawLocalRefreshToken(), $newTokenData->getLocalRefreshTokenExpiresAt()));
+        $response->headers->setCookie($this->cookieService->createAccess($newTokenData->getLocalAccessToken(), $newTokenData->getLocalAccessTokenExpiresAt()));
 
         return $response;
 
