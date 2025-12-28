@@ -1,0 +1,15 @@
+{# templates/auth/login.html.twig #}
+
+<h1>Login</h1>
+
+{{ form_start(loginForm, {
+    action: path('app_auth_login'),
+    method: 'POST'
+}) }}
+
+    {{ form_row(loginForm.email) }}
+    {{ form_row(loginForm.password) }}
+
+    {{ form_row(loginForm.login) }}
+
+{{ form_end(loginForm) }}
