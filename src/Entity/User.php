@@ -9,6 +9,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherAwareInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -16,7 +19,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PROVIDER_SUB', fields: ['provider', 'tokenSub'])]
 #[ORM\Index(name: 'IDX_USER_EMAIL', fields: ['email'])]
 #[ORM\HasLifecycleCallbacks]
-class User implements UserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     use CreatedUpdatedTrait;
 
@@ -52,6 +55,11 @@ class User implements UserInterface
     #[ORM\OneToMany(targetEntity: Token::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $tokens;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $password = null;
+
+    private ?string $plainTextPassword = null;
+
     public function __construct()
     {
         $this->tokens = new ArrayCollection();
@@ -81,7 +89,7 @@ class User implements UserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        
+
         // Ensure ROLE_USER is always present (security measure)
         if (!in_array('ROLE_USER', $roles, true)) {
             $roles[] = 'ROLE_USER';
@@ -166,8 +174,30 @@ class User implements UserInterface
         return $this;
     }
 
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(?string $hashedPassword): static
+    {
+        $this->password = $hashedPassword;
+        return $this;
+    }
+
+    public function getPlainTextPassword(): ?string
+    {
+        return $this->plainTextPassword;
+    }
+
+    public function setPlainTextPassword(?string $password): static
+    {
+        $this->plainTextPassword = $password;
+        return $this;
+    }
+
     public function eraseCredentials(): void
     {
-        // TODO: Implement eraseCredentials() method.
+        $this->plainTextPassword = null;
     }
 }
