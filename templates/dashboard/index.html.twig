@@ -28,6 +28,15 @@
         <main class="col-12 col-md-9 col-lg-10 p-4">
             <h2>Main Content</h2>
             <p>This is a very basic Bootstrap 5 dashboard layout.</p>
+            <pre>
+                {{ dump(app.request.cookies.all) }}
+            </pre>
+            <hr>
+            <pre>
+                <code>
+                    {{ dump(app.user) }}
+                </code>
+            </pre>
         </main>
     </div>
 </div>
