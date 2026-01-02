@@ -38,6 +38,16 @@ readonly class UserService
         );
     }
 
+    public function findByEmail(string $email): ?User
+    {
+        return $this->userRepository->findOneBy(
+            [
+                'email' => $email,
+                'provider' => ProviderEnum::LIGHTFOOT
+            ]
+        );
+    }
+
     public function createUser(ResourceOwnerDto $remoteUser): User
     {
         $user = new User();
