@@ -12,7 +12,8 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 class AuthLoginUserController extends AbstractController
 {
     /**
-     * define user login form
+     * We only display the form. form processing is done in the Authenticator
+     * @see src/Authenticator/LoginFormAuthenticator
      */
     #[Route('/', name: 'app_auth_login', methods: ['GET'])]
     public function login(AuthenticationUtils $authenticationUtils): Response
