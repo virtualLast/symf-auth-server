@@ -65,6 +65,10 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
             throw new AuthenticationException('Invalid credentials.');
         }
 
+        /**
+         * Lightfoot provider is hard coded in the findByEmail method.
+         * email + provider is unique.
+         */
         return new Passport(
             new UserBadge($email, function (string $email): ?User {
                 return $this->userService->findByEmail($email);
@@ -85,27 +89,39 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         /** @var User $user */
         $user = $token->getUser();
 
+        if (!$user instanceof User) {
+            throw new AuthenticationException('Invalid user type');
+        }
+
         // Mirror OIDC behaviour from this point onward
-        $internalTokenData = $this->tokenService->createSimpleToken();
-        $tokenData = $this->tokenService->issueTokens($internalTokenData, $user);
+        try {
+            $internalTokenData = $this->tokenService->createSimpleToken();
+            $tokenData = $this->tokenService->issueTokens($internalTokenData, $user);
 
-        $cookieAccess = $this->cookieService->createAccess(
-            $tokenData->getLocalAccessToken(),
-            $tokenData->getLocalAccessTokenExpiresAt()
-        );
+            $cookieAccess = $this->cookieService->createAccess(
+                $tokenData->getLocalAccessToken(),
+                $tokenData->getLocalAccessTokenExpiresAt()
+            );
 
-        $cookieRefresh = $this->cookieService->createRefresh(
-            $tokenData->getRawLocalRefreshToken(),
-            $tokenData->getLocalRefreshTokenExpiresAt()
-        );
+            $cookieRefresh = $this->cookieService->createRefresh(
+                $tokenData->getRawLocalRefreshToken(),
+                $tokenData->getLocalRefreshTokenExpiresAt()
+            );
 
-        $response = new RedirectResponse(
-            $this->urlGenerator->generate('app_dashboard_index')
-        );
+            $response = new RedirectResponse(
+                $this->urlGenerator->generate('app_dashboard_index')
+            );
 
-        $response->headers->setCookie($cookieAccess);
-        $response->headers->setCookie($cookieRefresh);
+            $response->headers->setCookie($cookieAccess);
+            $response->headers->setCookie($cookieRefresh);
 
-        return $response;
+            return $response;
+        } catch (\Throwable $e) {
+            throw new AuthenticationException(
+                'Token issuance failed.',
+                0,
+                $e
+            );
+        }
     }
 }

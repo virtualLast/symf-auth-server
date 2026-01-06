@@ -42,6 +42,6 @@ class LogoutController extends AbstractController
         $redirectResponse->headers->clearCookie(CookieService::REFRESH_COOKIE_NAME);
         $redirectResponse->headers->clearCookie(CookieService::ACCESS_COOKIE_NAME);
 
-        return $this->redirect($redirectUrl);
+        return $redirectResponse;
     }
 }
