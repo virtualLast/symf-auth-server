@@ -2,7 +2,7 @@
 
 namespace App\Tests\Controller;
 
-use App\Kernel;
+use App\Entity\User;
 use App\Service\CookieService;
 use App\Service\TokenService;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -16,13 +16,10 @@ class LogoutControllerTest extends WebTestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
         $this->tokenService = $this->createMock(TokenService::class);
         $this->cookieService = new CookieService();
-    }
 
-    protected static function getKernelClass(): string
-    {
-        return Kernel::class;
     }
 
     public function test_logout_revokes_token_and_clears_cookies_and_redirects(): void
@@ -31,15 +28,15 @@ class LogoutControllerTest extends WebTestCase
         // - Create client
         $client = static::createClient();
 
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setRoles(['ROLE_USER']);
+        $client->loginUser($user);
+
         $this->tokenService
             ->expects($this->once())
             ->method('revokeToken')
             ->with(CookieService::REFRESH_COOKIE_NAME)
-        ;
-        $this->tokenService
-            ->expects($this->once())
-            ->method('revokeToken')
-            ->with(CookieService::ACCESS_COOKIE_NAME)
         ;
 
         static::getContainer()->set(TokenService::class, $this->tokenService);
@@ -58,7 +55,7 @@ class LogoutControllerTest extends WebTestCase
 
         // Act
         // - Perform POST /logout
-        $client->request('POST', '/logout', [
+        $client->request('POST', '/logout/', [
             'redirect_url' => 'https://example.com/after-logout',
         ]);
 
@@ -66,51 +63,76 @@ class LogoutControllerTest extends WebTestCase
         // - Response is a redirect
         $response = $client->getResponse();
         $this->assertSame(302, $response->getStatusCode());
-        // - Location header matches redirect_url
+        $this->assertSame('https://example.com/after-logout', $response->headers->get('Location'));
+
         // - Access and refresh cookies are cleared
-        // - TokenService::revokeToken was called
+        $response = $client->getResponse();
+        $this->assertCount(2, $response->headers->getCookies());
+        foreach ($response->headers->getCookies() as $cookie) {
+            $this->assertTrue($cookie->getExpiresTime() < time());
+        }
     }
 
     public function test_logout_fails_when_refresh_token_cookie_is_missing(): void
     {
         // Arrange
-        // - Create client without refresh token cookie
-        // - Provide redirect_url
+        $client = static::createClient();
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setRoles(['ROLE_USER']);
+        $client->loginUser($user);
 
         // Act
-        // - Perform POST /logout
+        $client->request('POST', '/logout/', [
+            'redirect_url' => 'https://example.com/after-logout',
+        ]);
 
         // Assert
-        // - Response status is 400
-        // - Error message indicates missing refresh token
+        $response = $client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringContainsString('Refresh token not found', $response->getContent());
     }
 
     public function test_logout_fails_when_redirect_url_is_missing(): void
     {
         // Arrange
-        // - Create client with refresh token cookie
-        // - Do not include redirect_url in POST data
+        $client = static::createClient();
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setRoles(['ROLE_USER']);
+        $client->loginUser($user);
+
+        $client->getCookieJar()->set($this->createRefreshTokenCookie());
 
         // Act
-        // - Perform POST /logout
+        $client->request('POST', '/logout/', []);
 
         // Assert
-        // - Response status is 400
-        // - Error message indicates missing redirect location
+        $response = $client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringContainsString('Redirect location not found', $response->getContent());
     }
 
     public function test_logout_fails_when_redirect_url_is_invalid(): void
     {
         // Arrange
-        // - Create client with refresh token cookie
-        // - Provide invalid redirect_url value
+        $client = static::createClient();
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setRoles(['ROLE_USER']);
+        $client->loginUser($user);
+
+        $client->getCookieJar()->set($this->createRefreshTokenCookie());
 
         // Act
-        // - Perform POST /logout
+        $client->request('POST', '/logout/', [
+            'redirect_url' => 'not-a-url',
+        ]);
 
         // Assert
-        // - Response status is 400
-        // - Error message indicates invalid redirect location
+        $response = $client->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringContainsString('Invalid redirect location', $response->getContent());
     }
 
     private function createRefreshTokenCookie(): Cookie
