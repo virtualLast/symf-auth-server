@@ -1,17 +1,40 @@
-{# templates/auth/login.html.twig #}
+{% extends 'base.html.twig' %}
 
-<h1>Login</h1>
+{% block title %}Login{% endblock %}
 
-{{ form_start(loginForm, {
-    action: path('app_auth_login'),
-    method: 'POST'
-}) }}
-    {% if error %}
-        <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-    {% endif %}
-    {{ form_row(loginForm.email) }}
-    {{ form_row(loginForm.password) }}
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h3 mb-3 fw-normal text-center">Login</h1>
 
-    {{ form_row(loginForm.login) }}
+                    {{ form_start(loginForm, {
+                        action: path('app_auth_login'),
+                        method: 'POST'
+                    }) }}
+                        {% if error %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ error.messageKey|trans(error.messageData, 'security') }}
+                            </div>
+                        {% endif %}
 
-{{ form_end(loginForm) }}
+                        <div class="mb-3">
+                            {{ form_row(loginForm.email, { attr: { placeholder: 'name@example.com' } }) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_row(loginForm.password) }}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {{ form_row(loginForm.login, { attr: { class: 'btn btn-primary btn-lg' } }) }}
+                        </div>
+                    {{ form_end(loginForm) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
