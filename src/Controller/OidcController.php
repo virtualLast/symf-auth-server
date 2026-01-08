@@ -47,7 +47,7 @@ class OidcController extends AbstractController
         $providerEnum = ProviderEnum::from($provider);
         $scopes = $this->scopeService->getScopesForProvider($providerEnum);
 
-        return $client->redirect($scopes);
+        return $client->redirect($scopes, []);
     }
 
     /**

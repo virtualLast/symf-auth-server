@@ -7,7 +7,7 @@ use App\Model\Dto\ResourceOwnerDto;
 use App\Model\Enum\ProviderEnum;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 
-final class ResourceOwnerMapper
+class ResourceOwnerMapper
 {
     public function map(
         ResourceOwnerInterface $resourceOwner,
