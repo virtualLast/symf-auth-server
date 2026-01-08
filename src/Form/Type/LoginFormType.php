@@ -26,6 +26,8 @@ class LoginFormType extends AbstractType
                     new Assert\NotBlank(),
                 ]
             ])
-            ->add('Login', SubmitType::class);
+            ->add('login', SubmitType::class, [
+                'label' => 'Login'
+            ]);
     }
 }
