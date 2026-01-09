@@ -52,10 +52,18 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
      */
     public function authenticate(Request $request): Passport
     {
-        $email = $request->request->get('email');
-        $password = $request->request->get('password');
-        $csrfToken = $request->request->get('csrf_token');
 
+        $payload = $request->getPayload()->all();
+        $formData = $payload['login_form'] ?? null;
+
+        if (!is_array($formData)) {
+            throw new AuthenticationException('Invalid login submission.');
+        }
+
+
+        $email = $formData['email'] ?? null;
+        $password = $formData['password'] ?? null;
+        $csrfToken = $formData['_token'] ?? null;
 
         if (
             $email === null

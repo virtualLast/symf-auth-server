@@ -15,7 +15,7 @@ class AuthLoginUserController extends AbstractController
      * We only display the form. form processing is done in the Authenticator
      * @see src/Authenticator/LoginFormAuthenticator
      */
-    #[Route('/', name: 'app_auth_login', methods: ['GET'])]
+    #[Route('/', name: 'app_auth_login', methods: ['GET', 'POST'])]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         $lastUsername = $authenticationUtils->getLastUsername();

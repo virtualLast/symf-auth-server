@@ -10,6 +10,9 @@
                 <div class="card-body p-4">
                     <h1 class="h3 mb-3 fw-normal text-center">Login</h1>
 
+                    <small>login_user_1@example.com</small>
+                    <small>password</small>
+
                     {{ form_start(loginForm, {
                         action: path('app_auth_login'),
                         method: 'POST'

@@ -19,7 +19,7 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            stateless: true
+            stateless: false
 
             custom_authenticators:
                 - App\Authenticator\LoginFormAuthenticator
@@ -29,9 +29,14 @@ security:
             # switch_user: true
 
     access_control:
-        - { path: ^/logout, roles: ROLE_USER }
-    # - { path: ^/admin, roles: ROLE_ADMIN }
-    # - { path: ^/profile, roles: ROLE_USER }
+        # Auth entry points
+        - { path: ^/auth/login, roles: PUBLIC_ACCESS }
+        - { path: ^/oidc, roles: PUBLIC_ACCESS }
+        - { path: ^/saml, roles: PUBLIC_ACCESS }
+
+        # Everything else requires auth
+        - { path: ^/, roles: ROLE_USER }
+
 
 when@test:
     security:

@@ -6,9 +6,14 @@ use App\Entity\User;
 use App\Model\Enum\ProviderEnum;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture
 {
+    public function __construct(private readonly UserPasswordHasherInterface $passwordHasher)
+    {
+    }
+
     public function load(ObjectManager $manager): void
     {
 
@@ -25,9 +30,12 @@ class UserFixtures extends Fixture
             $user = new User();
             $user->setEmail(sprintf('login_user_%s@example.com', $i));
             $user->setTokenSub(sprintf('login_user_token_sub_%s', $i));
-            $user->setPlainTextPassword('password');
             $user->setProvider(ProviderEnum::LIGHTFOOT);
             $user->setRoles(['ROLE_USER']);
+
+            $hashedPassword = $this->passwordHasher->hashPassword($user, 'password');
+            $user->setPassword($hashedPassword);
+
             $manager->persist($user);
         }
 
